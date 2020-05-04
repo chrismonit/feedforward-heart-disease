@@ -3,10 +3,6 @@ import numpy as np
 from Bio import AlignIO
 import sys
 
-NAME_DELIM = "."
-LABEL_INDEX = 1  # index of name field which denotes the subtype
-ID_INDEX = 2  # index of name field denoting the unique identifier
-
 alphabet = list("ACGTN-")
 base_to_int = dict(zip(alphabet, range(len(alphabet))))
 int_to_base = dict(zip(range(len(alphabet)), alphabet))
@@ -25,7 +21,7 @@ def preproc_file(align_path, align_format):
     return preproc_align(align)
 
 
-def preproc_align(align, id_col="id", ground_truth_col="label"):
+def preproc_align(align, id_col="id", ground_truth_col="label", name_delim=".", label_index=1, id_index=2):
     data = np.zeros((len(align), align.get_alignment_length() * len(alphabet)))
     for iRecord in range(len(align)):
         seq = align[iRecord].seq.upper()
@@ -39,9 +35,9 @@ def preproc_align(align, id_col="id", ground_truth_col="label"):
 
     identifiers, labels = [], []
     for record in align:
-        split = record.name.split(NAME_DELIM)
-        labels.append(split[LABEL_INDEX])
-        identifiers.append(split[ID_INDEX])
+        split = record.name.split(name_delim)
+        labels.append(split[label_index])
+        identifiers.append(split[id_index])
     df[ground_truth_col] = labels
     df[id_col] = identifiers
     df = df[[id_col, ground_truth_col] + list(df.columns[:-2].values)]

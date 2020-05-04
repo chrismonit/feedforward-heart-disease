@@ -1,0 +1,11 @@
+**/.DS_Store
+**/*.pyc
+**/__pycache__/**
+**/*.swp
+**/*~
+~*
+**/.idea/**
+**/venv/**
+
+out/**
+data/**

@@ -41,6 +41,7 @@ def preproc_align(align, id_col="id", ground_truth_col="label", name_delim=".", 
     df[ground_truth_col] = labels
     df[id_col] = identifiers
     df = df[[id_col, ground_truth_col] + list(df.columns[:-2].values)]
+    df = df.set_index(id_col)
     return df
 
 

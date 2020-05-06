@@ -4,6 +4,7 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 import src.preproc as preproc
+import src.preproc_cleveland as preproc_cleveland
 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src
 DATA_DIR = os.path.join(ROOT_DIR, "data")
@@ -62,7 +63,7 @@ class Log_reg():
         return y_pred
 
 
-def main():
+def seq_classifier():
     np.random.seed(10)
     data = preproc.preproc_file(os.path.join(DATA_DIR, "short_names_capsid_master.fasta"), 'fasta')
     classes = {'A1': 1, 'A2': 0}
@@ -102,5 +103,10 @@ def main():
     print()
 
 
+def heart_disease():
+    data = preproc_cleveland.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"))
+    print(data)
+
+
 if __name__ == '__main__':
-    main()
+    heart_disease()

@@ -104,7 +104,7 @@ def seq_classifier():
 
 
 def heart_disease():
-    data = preproc_cleveland.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"))
+    data, means, stds = preproc_cleveland.from_file_standardised(os.path.join(DATA_DIR, "processed.cleveland.data.csv"))
     print(data)
 
 

@@ -33,6 +33,11 @@ def from_file(path):
     return df
 
 
+def from_file_standardised(path):
+    df = from_file(path)
+    return standardise(df)
+
+
 def get_data(file_path):
     """Data pre-processing"""
     assert set(CATEGORICAL + QUANTITATIVE) == set(NAMES) - set(["num"]), "Inconsistent categorical/quantiative names"
@@ -56,6 +61,13 @@ def assign_dummies(df, names):
         df = pd.concat([df.drop(name, axis=1),  # .astype('int64'),
                         pd.get_dummies(df[name], prefix=name, prefix_sep="-", drop_first=True)], axis=1)
     return df
+
+
+def standardise(df):
+    means = df.mean()
+    stds = df.std()
+    standardised = (df - means).div(stds)
+    return standardised, means, stds
 
 
 def main():

@@ -8,10 +8,18 @@ import src.preproc_cleveland as preproc_cleveland
 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src
 DATA_DIR = os.path.join(ROOT_DIR, "data")
+DEC = 3
 
 
 def sigmoid(z):
     return 1./(1 + np.exp(-z))
+
+
+def standardise(df):
+    means = df.mean()
+    stds = df.std()
+    standardised = (df - means).div(stds)
+    return standardised, means, stds
 
 
 # TODO regularisation? Class balancing?
@@ -103,9 +111,62 @@ def seq_classifier():
     print()
 
 
+def performance(y_true, y_pred):
+    result = {}
+    train_results = pd.merge(y_true, y_pred, left_index=True, right_index=True)
+    result['confusion'] = pd.crosstab(train_results.iloc[:, 0], train_results.iloc[:, 1])
+    result['accuracy'] = metrics.accuracy_score(y_true, y_pred, normalize=True)
+    result['sensitivity'] = result['confusion'].loc[1, 1] / result['confusion'].loc[1, :].sum()
+    result['specificity'] = result['confusion'].loc[0, 0] / result['confusion'].loc[0, :].sum()
+    return result
+
+
 def heart_disease():
-    data, means, stds = preproc_cleveland.from_file_standardised(os.path.join(DATA_DIR, "processed.cleveland.data.csv"))
-    print(data)
+    # TODO should we not drop the nth category in the dummy fields?
+    np.random.seed(10)
+
+    signal_catagorical = ['sex', 'cp', 'exang', 'slope', 'thal']
+    signal_quantitative = ['age', 'thalach', 'oldpeak', 'ca']
+    signal_features = signal_catagorical + signal_quantitative
+
+    data = preproc_cleveland.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"))
+    features_to_use = [col for col in data.columns for feature in signal_features if
+     col == feature or col.startswith(feature + preproc_cleveland.DUMMY_SEPARATOR)]
+    data = data[['disease'] + features_to_use]
+    LABEL = 'disease'
+    labels = data[LABEL]
+    measurements = data.drop(LABEL, axis=1)
+    X_train, X_test, y_train, y_test = train_test_split(measurements, labels, test_size=0.33)
+
+    X_train_scaled, X_train_means, X_train_stds = standardise(X_train)
+    X_test_scaled = (X_test - X_train_means).div(X_train_stds)
+
+    X = X_train_scaled.T  # rows are features, columns are training cases
+    X_test = X_test_scaled.T
+    y = y_train
+
+    n_features, m = X.shape
+    n_iterations = int(1 * 1e1)
+    alpha = 0.001
+    print(f"m={m}, n_features={n_features}", f"", "", sep="\n")
+
+    model = Log_reg(num_features=n_features)
+    model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.0001)
+
+    y_pred_train = pd.Series(model.predict(X), index=X.columns, name='predict')
+    train_performance = performance(y, y_pred_train)
+    print("Performance on training data:")
+    for k in train_performance.keys():
+        print(k, np.round(train_performance[k], DEC))
+    print()
+    # print(f"TP", train_confusion.loc[(train_confusion['predict'] == 1) & train_confusion[LABEL] == 1], "", sep="\n")
+
+    print("Performance on test data:")
+    y_pred_test = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    test_performance = performance(y_test, y_pred_test)
+    for k in test_performance.keys():
+        print(k, np.round(test_performance[k], DEC))
+    print()
 
 
 if __name__ == '__main__':

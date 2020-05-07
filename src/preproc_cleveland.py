@@ -7,6 +7,7 @@ NAMES = ["age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach", "e
 CATEGORICAL = ['sex', 'cp', 'fbs', 'restecg', 'exang', 'slope', 'thal']
 QUANTITATIVE = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak', 'ca']
 MISSING_MARKER = "?"  # used in input data to denote missing data
+DUMMY_SEPARATOR = "-"
 
 # FULL_NAMES = {
 #     'age': "Age in years",
@@ -33,11 +34,6 @@ def from_file(path):
     return df
 
 
-def from_file_standardised(path):
-    df = from_file(path)
-    return standardise(df)
-
-
 def get_data(file_path):
     """Data pre-processing"""
     assert set(CATEGORICAL + QUANTITATIVE) == set(NAMES) - set(["num"]), "Inconsistent categorical/quantiative names"
@@ -59,15 +55,8 @@ def get_data(file_path):
 def assign_dummies(df, names):
     for name in names:
         df = pd.concat([df.drop(name, axis=1),  # .astype('int64'),
-                        pd.get_dummies(df[name], prefix=name, prefix_sep="-", drop_first=True)], axis=1)
+                        pd.get_dummies(df[name], prefix=name, prefix_sep=DUMMY_SEPARATOR, drop_first=True)], axis=1)
     return df
-
-
-def standardise(df):
-    means = df.mean()
-    stds = df.std()
-    standardised = (df - means).div(stds)
-    return standardised, means, stds
 
 
 def main():

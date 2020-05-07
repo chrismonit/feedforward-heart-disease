@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
+from sklearn.linear_model import LogisticRegression
 import src.preproc as preproc
 import src.preproc_cleveland as preproc_cleveland
 
@@ -146,15 +147,16 @@ def heart_disease():
     y = y_train
 
     n_features, m = X.shape
-    n_iterations = int(1 * 1e5)
+    n_iterations = int(1 * 1e1)
     alpha = 0.001
     print(f"m={m}, n_features={n_features}", f"", "", sep="\n")
 
     model = Log_reg(num_features=n_features)
     final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.0001)
     print(f"Final cost: {final_cost}", "", sep="\n")
-    y_pred_train = pd.Series(model.predict(X), index=X.columns, name='predict')
-    train_performance = performance(y, y_pred_train)
+
+    y_pred_train_lr = pd.Series(model.predict(X), index=X.columns, name='predict')
+    train_performance = performance(y, y_pred_train_lr)
     print("Performance on training data:")
     for k in train_performance.keys():
         print(k, np.round(train_performance[k], DEC))
@@ -166,6 +168,21 @@ def heart_disease():
     test_performance = performance(y_test, y_pred_test)
     for k in test_performance.keys():
         print(k, np.round(test_performance[k], DEC))
+    print()
+
+    lr = LogisticRegression(penalty='none')
+    result = lr.fit(X.T, y)
+    print(type(result))
+    lr_y_pred_train = pd.Series(result.predict(X.T), index=X.T.index, name='predict')
+    lr_train_performance = performance(y, lr_y_pred_train)
+    for k in lr_train_performance.keys():
+        print(k, np.round(lr_train_performance[k], DEC))
+    print()
+
+    lr_y_pred_test = pd.Series(result.predict(X_test.T), index=X_test.T.index, name='predict')
+    lr_test_performance = performance(y_test, lr_y_pred_test)
+    for k in lr_test_performance.keys():
+        print(k, np.round(lr_test_performance[k], DEC))
     print()
 
 

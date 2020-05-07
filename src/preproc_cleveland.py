@@ -28,9 +28,9 @@ GROUND_TRUTH_LABEL = 'disease'
 DESCRIPTION = "Identifying features with potential predictive value for heart disease"
 
 
-def from_file(path):
+def from_file(path, drop_first):
     df = get_data(path)
-    df = assign_dummies(df, CATEGORICAL)
+    df = assign_dummies(df, CATEGORICAL, drop_first)
     return df
 
 
@@ -52,10 +52,11 @@ def get_data(file_path):
     return df
 
 
-def assign_dummies(df, names):
+def assign_dummies(df, names, drop_first):
     for name in names:
         df = pd.concat([df.drop(name, axis=1),  # .astype('int64'),
-                        pd.get_dummies(df[name], prefix=name, prefix_sep=DUMMY_SEPARATOR, drop_first=True)], axis=1)
+                        pd.get_dummies(df[name], prefix=name, prefix_sep=DUMMY_SEPARATOR, drop_first=drop_first)],
+                       axis=1)
     return df
 
 

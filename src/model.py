@@ -54,6 +54,7 @@ class Log_reg():
             self._update(dw, db, learn_rate)
             if i % int(1. / print_frequency) == 0:
                 print(f"LogReg: iteration={i}, cost={cost}")
+        return cost
 
     @staticmethod
     def cross_entropy_cost(y_pred, y_true):
@@ -122,18 +123,17 @@ def performance(y_true, y_pred):
 
 
 def heart_disease():
-    # TODO should we not drop the nth category in the dummy fields?
     np.random.seed(10)
-
+    LABEL = 'disease'
+    DROP_FIRST = False
     signal_catagorical = ['sex', 'cp', 'exang', 'slope', 'thal']
     signal_quantitative = ['age', 'thalach', 'oldpeak', 'ca']
     signal_features = signal_catagorical + signal_quantitative
 
-    data = preproc_cleveland.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"))
+    data = preproc_cleveland.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"), DROP_FIRST)
     features_to_use = [col for col in data.columns for feature in signal_features if
      col == feature or col.startswith(feature + preproc_cleveland.DUMMY_SEPARATOR)]
-    data = data[['disease'] + features_to_use]
-    LABEL = 'disease'
+    # data = data[[LABEL] + features_to_use]
     labels = data[LABEL]
     measurements = data.drop(LABEL, axis=1)
     X_train, X_test, y_train, y_test = train_test_split(measurements, labels, test_size=0.33)
@@ -146,13 +146,13 @@ def heart_disease():
     y = y_train
 
     n_features, m = X.shape
-    n_iterations = int(1 * 1e1)
+    n_iterations = int(1 * 1e5)
     alpha = 0.001
     print(f"m={m}, n_features={n_features}", f"", "", sep="\n")
 
     model = Log_reg(num_features=n_features)
-    model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.0001)
-
+    final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.0001)
+    print(f"Final cost: {final_cost}", "", sep="\n")
     y_pred_train = pd.Series(model.predict(X), index=X.columns, name='predict')
     train_performance = performance(y, y_pred_train)
     print("Performance on training data:")

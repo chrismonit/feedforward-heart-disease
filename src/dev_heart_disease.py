@@ -28,15 +28,14 @@ def standardise(df):
     return standardised, means, stds
 
 
-# TODO use nan instead of -1
-def performance(y_true, y_pred, model=-1, dataset=-1):
+def performance(y_true, y_pred, model=np.nan, dataset=np.nan):
     result = {}
     tn, fp, fn, tp = metrics.confusion_matrix(y_true, y_pred).ravel()
     result['model'] = model
     result['dataset'] = dataset
     result['accuracy'] = (tn + tp) / (tn + fp + fn + tp)
-    result['sensitivity'] = tp / (tp + fn)  # TODO check for div zero
-    result['specificity'] = tn / (tn + fp)
+    result['sensitivity'] = tp / (tp + fn) if (tp + fn) != 0 else np.nan
+    result['specificity'] = tn / (tn + fp) if (tn + fp) != 0 else np.nan
     result['roc_auc'] = metrics.roc_auc_score(y_true, y_pred)
     result.update(dict(zip(['tn', 'fp', 'fn', 'tp'], [tn, fp, fn, tp])))
     return result

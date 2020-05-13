@@ -120,13 +120,12 @@ def seq_classifier():
 
 def performance(y_true, y_pred):
     result = {}
-    train_results = pd.merge(y_true, y_pred, left_index=True, right_index=True)
-    result['confusion'] = pd.crosstab(train_results.iloc[:, 0], train_results.iloc[:, 1])
-    # TODO better to save each component of the confusion matrix separately?
-    result['accuracy'] = metrics.accuracy_score(y_true, y_pred, normalize=True)
-    result['sensitivity'] = result['confusion'].loc[1, 1] / result['confusion'].loc[1, :].sum()
-    result['specificity'] = result['confusion'].loc[0, 0] / result['confusion'].loc[0, :].sum()
+    tn, fp, fn, tp = metrics.confusion_matrix(y_true, y_pred).ravel()
+    result['accuracy'] = (tn + tp) / (tn + fp + fn + tp)
+    result['sensitivity'] = tp / (tp + fn)
+    result['specificity '] = tn / (tn + fp)
     result['roc_auc'] = metrics.roc_auc_score(y_true, y_pred)
+    result.update(dict(zip(['tn', 'fp', 'fn', 'tp'], [tn, fp, fn, tp])))
     return result
 
 

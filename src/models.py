@@ -50,3 +50,23 @@ class LogReg:
         A = LogReg.sigmoid(Z)
         y_pred = [int(a > self.predict_thresh) for a in A.squeeze()]
         return y_pred
+
+
+# NB if hidden layers is empty, or has single value 0, should become logreg? something like that
+class NetBin:
+    def __init__(self, num_features, hidden_layers, w_init_scale=0.01):
+        layers = [num_features] + hidden_layers + [1]
+        self.weights = []
+        self.biases = []
+        for l in range(1, len(layers)):
+            self.weights.append(np.random.randn(layers[l], layers[l-1]) * w_init_scale)
+            self.biases.append(np.zeros((layers[l], 1)))
+
+        for l in range(len(self.weights)):
+            print(f"Layer={l+1}", self.weights[l], self.weights[l].shape, self.biases[l], "", sep="\n")
+
+
+if __name__ == '__main__':
+    np.random.seed(10)
+    mynet = NetBin(2, [3, 5, 4, 2])
+

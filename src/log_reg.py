@@ -118,12 +118,15 @@ def seq_classifier():
     print()
 
 
-def performance(y_true, y_pred):
+# TODO use nan instead of -1
+def performance(y_true, y_pred, model=-1, dataset=-1):
     result = {}
     tn, fp, fn, tp = metrics.confusion_matrix(y_true, y_pred).ravel()
+    result['model'] = model
+    result['dataset'] = dataset
     result['accuracy'] = (tn + tp) / (tn + fp + fn + tp)
-    result['sensitivity'] = tp / (tp + fn)
-    result['specificity '] = tn / (tn + fp)
+    result['sensitivity'] = tp / (tp + fn)  # TODO check for div zero
+    result['specificity'] = tn / (tn + fp)
     result['roc_auc'] = metrics.roc_auc_score(y_true, y_pred)
     result.update(dict(zip(['tn', 'fp', 'fn', 'tp'], [tn, fp, fn, tp])))
     return result
@@ -158,66 +161,50 @@ def heart_disease():
     print(f"m={m}, n_features={n_features}", f"", "", sep="\n")
 
     model = Log_reg(num_features=n_features)
+    results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sensitivity', 'specificity', 'accuracy', 'tn', 'fp',
+                                    'fn', 'tp'])
     final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.0001)
     print(f"Final cost: {final_cost}", "", sep="\n")
 
     y_pred_train_lr = pd.Series(model.predict(X), index=X.columns, name='predict')
-    train_performance = performance(y, y_pred_train_lr)
-    print("Performance on training data:")
-    for k in train_performance.keys():
-        print(k, np.round(train_performance[k], DEC))
-    print()
-    # print(f"TP", train_confusion.loc[(train_confusion['predict'] == 1) & train_confusion[LABEL] == 1], "", sep="\n")
+    results = results.append(performance(y, y_pred_train_lr, model="my_lr", dataset="train"), ignore_index=True)
 
-    print("Performance on test data:")
     y_pred_test = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    test_performance = performance(y_test, y_pred_test)
-    for k in test_performance.keys():
-        print(k, np.round(test_performance[k], DEC))
-    print()
+    results = results.append(performance(y_test, y_pred_test, model="my_lr", dataset="test"), ignore_index=True)
 
-    print("Testing sklearn implementation of logistinc regression")
+    print("Testing sklearn implementation of logistic regression")
 
     lr2 = LogisticRegression(penalty='none')
     lr2.fit(X.T, y)
     lr_y_pred_train = pd.Series(lr2.predict(X.T), index=X.T.index, name='predict')
-    lr_train_performance = performance(y, lr_y_pred_train)
-    for k in lr_train_performance.keys():
-        print(k, np.round(lr_train_performance[k], DEC))
-    print()
+    results = results.append(performance(y, lr_y_pred_train, model="skl_lr", dataset="train"), ignore_index=True)
 
     lr_y_pred_test = pd.Series(lr2.predict(X_test.T), index=X_test.T.index, name='predict')
-    lr_test_performance = performance(y_test, lr_y_pred_test)
-    for k in lr_test_performance.keys():
-        print(k, np.round(lr_test_performance[k], DEC))
-    print()
+    results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr", dataset="test"), ignore_index=True)
 
-    print(f"Feature selection using RFECV", f"", "", sep="\n")
+    print(f"Feature selection using RFECV", "", sep="\n")
     selector_lr = LogisticRegression(penalty='none')
     selector = RFECV(selector_lr, step=1, verbose=0)
     selector.fit(X.T, y)
-    print(f"Number of features chosen by RFECV={selector.n_features_}")
-    print(f"Features found to ", X.T.loc[:, selector.support_].columns)
+    print(f"Features found by RFECV with sklearn implementation ({selector.n_features_}):",
+          X.T.loc[:, selector.support_].columns.to_numpy(), "", sep="\n")
 
-    plt.figure()
-    plt.xlabel("Number of features selected")
-    plt.ylabel("Cross validation score (nb of correct classifications)")
-    plt.plot(range(1, len(selector.grid_scores_) + 1), selector.grid_scores_)
-    plt.show()
+    # plt.figure()
+    # plt.xlabel("Number of features selected")
+    # plt.ylabel("Cross validation score (nb of correct classifications)")
+    # plt.plot(range(1, len(selector.grid_scores_) + 1), selector.grid_scores_)
+    # plt.show()
 
     lr2 = LogisticRegression(penalty='none')
     lr2.fit(X.T.loc[:, selector.support_], y)
     lr_y_pred_train = pd.Series(lr2.predict(X.T.loc[:, selector.support_]), index=X.T.index, name='predict')
-    lr_train_performance = performance(y, lr_y_pred_train)
-    for k in lr_train_performance.keys():
-        print(k, np.round(lr_train_performance[k], DEC))
-    print()
+    results = results.append(performance(y, lr_y_pred_train, model="skl_lr_rfecv", dataset="train"), ignore_index=True)
 
     lr_y_pred_test = pd.Series(lr2.predict(X_test.T.loc[:, selector.support_]), index=X_test.T.index, name='predict')
-    lr_test_performance = performance(y_test, lr_y_pred_test)
-    for k in lr_test_performance.keys():
-        print(k, np.round(lr_test_performance[k], DEC))
-    print()
+    results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr_rfecv", dataset="test"),
+                             ignore_index=True)
+
+    print(results)
 
 
 if __name__ == '__main__':

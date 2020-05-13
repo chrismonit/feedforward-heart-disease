@@ -4,8 +4,12 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
+from sklearn.feature_selection import RFECV
 import src.preproc as preproc
 import src.preproc_cleveland as preproc_cleveland
+import matplotlib.pyplot as plt
+
+pd.options.display.width = 0  # adjust according to terminal width
 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src
 DATA_DIR = os.path.join(ROOT_DIR, "data")
@@ -24,6 +28,7 @@ def standardise(df):
 
 
 # TODO regularisation? Class balancing?
+# TODO could check if this satisfies sci kit learn's api as a classifier
 class Log_reg():
     def __init__(self, num_features, w_init=None, b_init=None, predict_thresh=0.5):
         self.w = w_init if w_init else np.zeros((num_features, 1))
@@ -117,9 +122,11 @@ def performance(y_true, y_pred):
     result = {}
     train_results = pd.merge(y_true, y_pred, left_index=True, right_index=True)
     result['confusion'] = pd.crosstab(train_results.iloc[:, 0], train_results.iloc[:, 1])
+    # TODO better to save each component of the confusion matrix separately?
     result['accuracy'] = metrics.accuracy_score(y_true, y_pred, normalize=True)
     result['sensitivity'] = result['confusion'].loc[1, 1] / result['confusion'].loc[1, :].sum()
     result['specificity'] = result['confusion'].loc[0, 0] / result['confusion'].loc[0, :].sum()
+    result['roc_auc'] = metrics.roc_auc_score(y_true, y_pred)
     return result
 
 
@@ -170,16 +177,44 @@ def heart_disease():
         print(k, np.round(test_performance[k], DEC))
     print()
 
-    lr = LogisticRegression(penalty='none')
-    result = lr.fit(X.T, y)
-    print(type(result))
-    lr_y_pred_train = pd.Series(result.predict(X.T), index=X.T.index, name='predict')
+    print("Testing sklearn implementation of logistinc regression")
+
+    lr2 = LogisticRegression(penalty='none')
+    lr2.fit(X.T, y)
+    lr_y_pred_train = pd.Series(lr2.predict(X.T), index=X.T.index, name='predict')
     lr_train_performance = performance(y, lr_y_pred_train)
     for k in lr_train_performance.keys():
         print(k, np.round(lr_train_performance[k], DEC))
     print()
 
-    lr_y_pred_test = pd.Series(result.predict(X_test.T), index=X_test.T.index, name='predict')
+    lr_y_pred_test = pd.Series(lr2.predict(X_test.T), index=X_test.T.index, name='predict')
+    lr_test_performance = performance(y_test, lr_y_pred_test)
+    for k in lr_test_performance.keys():
+        print(k, np.round(lr_test_performance[k], DEC))
+    print()
+
+    print(f"Feature selection using RFECV", f"", "", sep="\n")
+    selector_lr = LogisticRegression(penalty='none')
+    selector = RFECV(selector_lr, step=1, verbose=0)
+    selector.fit(X.T, y)
+    print(f"Number of features chosen by RFECV={selector.n_features_}")
+    print(f"Features found to ", X.T.loc[:, selector.support_].columns)
+
+    plt.figure()
+    plt.xlabel("Number of features selected")
+    plt.ylabel("Cross validation score (nb of correct classifications)")
+    plt.plot(range(1, len(selector.grid_scores_) + 1), selector.grid_scores_)
+    plt.show()
+
+    lr2 = LogisticRegression(penalty='none')
+    lr2.fit(X.T.loc[:, selector.support_], y)
+    lr_y_pred_train = pd.Series(lr2.predict(X.T.loc[:, selector.support_]), index=X.T.index, name='predict')
+    lr_train_performance = performance(y, lr_y_pred_train)
+    for k in lr_train_performance.keys():
+        print(k, np.round(lr_train_performance[k], DEC))
+    print()
+
+    lr_y_pred_test = pd.Series(lr2.predict(X_test.T.loc[:, selector.support_]), index=X_test.T.index, name='predict')
     lr_test_performance = performance(y_test, lr_y_pred_test)
     for k in lr_test_performance.keys():
         print(k, np.round(lr_test_performance[k], DEC))

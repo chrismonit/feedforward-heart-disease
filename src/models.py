@@ -1,5 +1,5 @@
 import numpy as np
-
+import pandas as pd
 
 # TODO regularisation? Class balancing?
 # TODO could check if this satisfies sci kit learn's api as a classifier
@@ -37,7 +37,7 @@ class LogReg:
         return cost
 
     @staticmethod
-    def cross_entropy_cost(y_pred, y_true):
+    def cross_entropy_cost(y_pred, y_true):  # TODO assumes y_true is a series, but better if more generic
         cost = np.sum(y_true.values * np.log(y_pred) + (1. - y_true.values) * np.log(1. - y_pred)) / -len(y_true)
         return cost.squeeze()
 
@@ -84,6 +84,7 @@ class NetBin:
         print("weights")
         for w in self.weights:
             print(w.shape)
+        return LogReg.cross_entropy_cost(self.activations[-1], y)  # TODO move cost to common class
 
 
 if __name__ == '__main__':
@@ -91,5 +92,6 @@ if __name__ == '__main__':
     num_features, m = 2, 5
     mynet = NetBin(num_features, [3, 5, 4, 2])
     X = np.random.randn(num_features, m)
-    y = np.array([1]*m)
-    mynet._forward(X, y)
+    y = pd.Series(np.array([1]*m))
+    cost = mynet._forward(X, y)
+    print(f"cost={cost}", f"", "", sep="\n")

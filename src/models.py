@@ -55,18 +55,41 @@ class LogReg:
 # NB if hidden layers is empty, or has single value 0, should become logreg? something like that
 class NetBin:
     def __init__(self, num_features, hidden_layers, w_init_scale=0.01):
-        layers = [num_features] + hidden_layers + [1]
-        self.weights = []
-        self.biases = []
-        for l in range(1, len(layers)):
-            self.weights.append(np.random.randn(layers[l], layers[l-1]) * w_init_scale)
-            self.biases.append(np.zeros((layers[l], 1)))
+        self.layers = [num_features] + hidden_layers + [1]
+        self.weights = [np.array([None])]
+        self.biases = [np.array([None])]
+        for l in range(1, len(self.layers)):
+            self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
+            self.biases.append(np.zeros((self.layers[l], 1)))
 
+        print("weights and biases")
         for l in range(len(self.weights)):
-            print(f"Layer={l+1}", self.weights[l], self.weights[l].shape, self.biases[l], "", sep="\n")
+            print(f"Layer={l}", self.weights[l], self.weights[l].shape, self.biases[l], "", sep="\n")
+
+    # NB will need to store the intermediate values
+    def _forward(self, X, y):
+        print("FORWARD")
+        self.activations = []  # TODO may be more efficient to create single list in init and update its values
+        self.activations.append(X)  # activations of layer 0
+        for hidden_l in range(1, len(self.layers)-1):
+            Z = np.dot(self.weights[hidden_l], self.activations[hidden_l-1]) + self.biases[hidden_l]
+            A = np.tanh(Z)
+            self.activations.append(A)
+        output_Z = np.dot(self.weights[-1], self.activations[-1]) + self.biases[-1]
+        self.activations.append(LogReg.sigmoid(output_Z))  # TODO move activations to common class or something
+        print()
+        print("Activations")
+        for a in self.activations:
+            print(a.shape)
+        print("weights")
+        for w in self.weights:
+            print(w.shape)
 
 
 if __name__ == '__main__':
     np.random.seed(10)
-    mynet = NetBin(2, [3, 5, 4, 2])
-
+    num_features, m = 2, 5
+    mynet = NetBin(num_features, [3, 5, 4, 2])
+    X = np.random.randn(num_features, m)
+    y = np.array([1]*m)
+    mynet._forward(X, y)

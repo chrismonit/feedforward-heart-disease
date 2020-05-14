@@ -58,13 +58,10 @@ class NetBin:
         self.layers = [num_features] + hidden_layers + [1]
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
+        self.signals = [np.array([None])]  # array of Z
         for l in range(1, len(self.layers)):
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))
-
-        print("weights and biases")
-        for l in range(len(self.weights)):
-            print(f"Layer={l}", self.weights[l], self.weights[l].shape, self.biases[l], "", sep="\n")
 
     # NB will need to store the intermediate values
     def _forward(self, X, y):
@@ -74,23 +71,23 @@ class NetBin:
         for hidden_l in range(1, len(self.layers)-1):
             Z = np.dot(self.weights[hidden_l], self.activations[hidden_l-1]) + self.biases[hidden_l]
             A = np.tanh(Z)
+            self.signals.append(Z)
             self.activations.append(A)
         output_Z = np.dot(self.weights[-1], self.activations[-1]) + self.biases[-1]
+        self.signals.append(output_Z)
         self.activations.append(LogReg.sigmoid(output_Z))  # TODO move activations to common class or something
-        print()
-        print("Activations")
-        for a in self.activations:
-            print(a.shape)
-        print("weights")
-        for w in self.weights:
-            print(w.shape)
+        for l in range(len(self.layers)):
+            print(self.weights[l])
+            print(self.biases[l])
+            print(self.activations[l])
+            print()
         return LogReg.cross_entropy_cost(self.activations[-1], y)  # TODO move cost to common class
 
 
 if __name__ == '__main__':
     np.random.seed(10)
     num_features, m = 2, 5
-    mynet = NetBin(num_features, [3, 5, 4, 2])
+    mynet = NetBin(num_features, [3, 5, 4, 2], w_init_scale=1)
     X = np.random.randn(num_features, m)
     y = pd.Series(np.array([1]*m))
     cost = mynet._forward(X, y)

@@ -62,8 +62,8 @@ class NetBin:
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
         self.signals = [np.array([None])]  # array of Z
-        self.activation_functions = [NetBin.tanh]*len(hidden_layers) + [NetBin.sigmoid]
-        self.activation_function_derivatives = [NetBin.tanh_deriv]*len(hidden_layers) + [NetBin.sigmoid_deriv]
+        self.activation_functions = [None] + [NetBin.tanh]*len(hidden_layers) + [NetBin.sigmoid]
+        self.activation_function_derivatives = [None] + [NetBin.tanh_deriv]*len(hidden_layers) + [NetBin.sigmoid_deriv]
         for l in range(1, len(self.layers)):
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))
@@ -72,19 +72,11 @@ class NetBin:
     def _forward(self, X, y):
         self.activations = []  # TODO may be more efficient to create single list in init and update its values
         self.activations.append(X)  # activations of layer 0
-        for hidden_l in range(1, len(self.layers)-1):
-            Z = np.dot(self.weights[hidden_l], self.activations[hidden_l-1]) + self.biases[hidden_l]
-            A = np.tanh(Z)
+        for l in range(1, len(self.layers)):
+            Z = np.dot(self.weights[l], self.activations[l-1]) + self.biases[l]
+            A = self.activation_functions[l](Z)
             self.signals.append(Z)
             self.activations.append(A)
-        output_Z = np.dot(self.weights[-1], self.activations[-1]) + self.biases[-1]
-        self.signals.append(output_Z)
-        self.activations.append(LogReg.sigmoid(output_Z))  # TODO move activations to common class or something
-        # for l in range(len(self.layers)):
-        #     print(self.weights[l])
-        #     print(self.biases[l])
-        #     print(self.activations[l])
-        #     print()
         return NetBin.cost(self.activations[-1], y)  # TODO move cost to common class
 
     @staticmethod
@@ -119,7 +111,6 @@ class NetBin:
         weight_derivs = []
         bias_derivs = []
         for l in range(1, len(self.layers)-1)[::-1]:
-            print(l)
             g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
             dZ = np.multiply(next_dA, g_prime_Z)
             dW = 1/len(y) * np.dot(dZ, self.activations[l-1].T)
@@ -136,7 +127,11 @@ if __name__ == '__main__':
     mynet = NetBin(num_features, [3, 5, 4, 2], w_init_scale=1)
     X = np.random.randn(num_features, m)
     y = np.expand_dims(np.array([1]*m), 0)
+
+    print("Forward:")
     cost = mynet._forward(X, y)
     print(f"cost={cost}", f"", "", sep="\n")
     # print(NetBin.cost_deriv(np.expand_dims(np.array([0.5, 0.5, 0.5]), 1), np.expand_dims(np.array([0, 1, 1]), 1)))
-    mynet._backward(y)
+    print("Backward:")
+    dW, db = mynet._backward(y)
+    print(f"dW=", dW, f"db=", db, "", sep="\n")

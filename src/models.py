@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
 
+EPSILON = 1e-8
 # TODO regularisation? Class balancing?
 # TODO could check if this satisfies sci kit learn's api as a classifier
+
+
 class LogReg:
     def __init__(self, num_features, w_init=None, b_init=None, predict_thresh=0.5):
         self.w = w_init if w_init else np.zeros((num_features, 1))
@@ -59,13 +62,14 @@ class NetBin:
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
         self.signals = [np.array([None])]  # array of Z
+        self.activation_functions = [NetBin.tanh]*len(hidden_layers) + [NetBin.sigmoid]
+        self.activation_function_derivatives = [NetBin.tanh_deriv]*len(hidden_layers) + [NetBin.sigmoid_deriv]
         for l in range(1, len(self.layers)):
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))
 
     # NB will need to store the intermediate values
     def _forward(self, X, y):
-        print("FORWARD")
         self.activations = []  # TODO may be more efficient to create single list in init and update its values
         self.activations.append(X)  # activations of layer 0
         for hidden_l in range(1, len(self.layers)-1):
@@ -76,12 +80,54 @@ class NetBin:
         output_Z = np.dot(self.weights[-1], self.activations[-1]) + self.biases[-1]
         self.signals.append(output_Z)
         self.activations.append(LogReg.sigmoid(output_Z))  # TODO move activations to common class or something
-        for l in range(len(self.layers)):
-            print(self.weights[l])
-            print(self.biases[l])
-            print(self.activations[l])
-            print()
-        return LogReg.cross_entropy_cost(self.activations[-1], y)  # TODO move cost to common class
+        # for l in range(len(self.layers)):
+        #     print(self.weights[l])
+        #     print(self.biases[l])
+        #     print(self.activations[l])
+        #     print()
+        return NetBin.cost(self.activations[-1], y)  # TODO move cost to common class
+
+    @staticmethod
+    def cost(y_pred, y_true):
+        cost = np.sum(y_true * np.log(y_pred) + (1. - y_true) * np.log(1. - y_pred)) / -len(y_true)
+        return cost.squeeze()
+
+    @staticmethod
+    def cost_deriv(A, y):
+        # TODO move to more generic class, and allow generalisation to other cost functions
+        return - (np.divide(y, A) - np.divide(1 - y, 1 - A))
+
+    @staticmethod
+    def sigmoid(z):
+        return 1. / (1 + np.exp(-z))
+
+    @staticmethod
+    def sigmoid_deriv(Z):
+        return LogReg.sigmoid(Z) * (1 - LogReg.sigmoid(Z))
+
+    @staticmethod
+    def tanh(Z):
+        return np.tanh(Z)
+
+    @staticmethod
+    def tanh_deriv(Z):
+        return 1 - np.power(np.tanh(Z), 2)
+
+    # TODO need to test
+    def _backward(self, y):
+        next_dA = NetBin.cost_deriv(self.activations[-1], y)  # initilise as dAL
+        weight_derivs = []
+        bias_derivs = []
+        for l in range(1, len(self.layers)-1)[::-1]:
+            print(l)
+            g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
+            dZ = np.multiply(next_dA, g_prime_Z)
+            dW = 1/len(y) * np.dot(dZ, self.activations[l-1].T)
+            db = 1/len(y) * np.sum(dZ, axis=1, keepdims=True)
+            weight_derivs.append(dW)
+            bias_derivs.append(db)
+            next_dA = np.dot(self.weights[l].T, dZ)
+        return weight_derivs, bias_derivs
 
 
 if __name__ == '__main__':
@@ -89,6 +135,8 @@ if __name__ == '__main__':
     num_features, m = 2, 5
     mynet = NetBin(num_features, [3, 5, 4, 2], w_init_scale=1)
     X = np.random.randn(num_features, m)
-    y = pd.Series(np.array([1]*m))
+    y = np.expand_dims(np.array([1]*m), 0)
     cost = mynet._forward(X, y)
     print(f"cost={cost}", f"", "", sep="\n")
+    # print(NetBin.cost_deriv(np.expand_dims(np.array([0.5, 0.5, 0.5]), 1), np.expand_dims(np.array([0, 1, 1]), 1)))
+    mynet._backward(y)

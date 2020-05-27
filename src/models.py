@@ -22,8 +22,10 @@ class LogReg:
     @staticmethod
     def _backward(A, X, y):
         dz = A - y
+        print(f"logreg dZ", f"{dz}", "", sep="\n")
         dw = np.dot(X, dz.T) / len(y)  # dz = A - Y
-        db = np.sum(dz) / len(y)
+        # db = np.sum(dz) / len(y)
+        db = np.sum(dz, axis=1, keepdims=True) / len(y)
         return dw, db
 
     def _update(self, dw, db, learn_rate):
@@ -119,6 +121,7 @@ class NetBin:
         for l in range(1, len(self.layers))[::-1]:
             g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
             dZ = np.multiply(next_dA, g_prime_Z)
+            print(f"Net dZ", f"{dZ}", "", sep="\n")
             dW = 1/len(y) * np.dot(dZ, self.activations[l-1].T)
             db = 1/len(y) * np.sum(dZ, axis=1, keepdims=True)
             weight_derivs.append(dW)

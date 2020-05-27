@@ -66,8 +66,6 @@ def heart_disease():
     y = y_train
 
     n_features, m = X.shape
-    n_iterations = int(1 * 50)
-    alpha = 0.001
     print(f"m={m}, n_features={n_features}", "", sep="\n")
     results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sensitivity', 'specificity', 'accuracy', 'tn', 'fp',
                                     'fn', 'tp'])
@@ -104,10 +102,13 @@ def heart_disease():
                              ignore_index=True)
 
     print("My models implementations:")
+    n_iterations = int(1 * 10)
+    print_frequency = 0.25
+    alpha = 0.001
     model = LogReg(num_features=n_features)
 
     # print(f"LogReg initialised weights", f"{model.w}", "", sep="\n")
-    final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.1)
+    final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=print_frequency)
     print(f"LogReg final cost", f"{final_cost}", "", sep="\n")
 
     y_pred_train_lr = pd.Series(model.predict(X), index=X.columns, name='predict')
@@ -120,13 +121,15 @@ def heart_disease():
     my_net_logreg = NetBin(X.shape[0], [], w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
     # print(f"net logreg initialised weights", f"{my_net_logreg.weights}", "", sep="\n")
     # print(f"net logreg initialised biases", f"{my_net_logreg.biases}", "", sep="\n")
-    my_net_logreg_cost = my_net_logreg.fit(X, np.expand_dims(y, 0), alpha, n_iterations, print_frequency=0.1)
+    my_net_logreg_cost = my_net_logreg.fit(X, np.expand_dims(y, 0), alpha, n_iterations,
+                                           print_frequency=print_frequency)
     print(f"net_lr final cost", f"{my_net_logreg_cost}", "", sep="\n")
     y_pred_train_net_logreg = pd.Series(my_net_logreg.predict(X), index=X.columns, name='predict')
     results = results.append(performance(y, y_pred_train_net_logreg, model="net_logreg", dataset="train"),
                              ignore_index=True)
     net_y_pred_test = pd.Series(my_net_logreg.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, net_y_pred_test, model="net_logreg", dataset="test"), ignore_index=True)
+    results = results.append(performance(y_test, net_y_pred_test, model="net_logreg", dataset="test"),
+                             ignore_index=True)
 
     print()
     print(results.sort_values("dataset"))

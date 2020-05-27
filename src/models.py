@@ -15,15 +15,12 @@ class LogReg:
     def _forward(self, X, y):
         Z = (np.dot(self.w.T, X) + self.b)
         A = self.sigmoid(Z)
-        # print(f"LogReg, A={A}")
         cost = self.cross_entropy_cost(A, y)
         return A, cost
 
     @staticmethod
     def _backward(A, X, y):
-        # print(f"logreg A", f"{A}", "", sep="\n")
         dz = A - y
-        # print(f"logreg dZ", f"{dz}", "", sep="\n")
         dw = np.dot(X, dz.T) / len(y)  # dz = A - Y
         # db = np.sum(dz) / len(y)
         db = np.sum(dz, axis=1, keepdims=True) / len(y)
@@ -39,7 +36,6 @@ class LogReg:
         for i in range(num_iterations):
             A, cost = self._forward(X, y)
             dw, db = self._backward(A, X, y)
-            # print(f"LogReg, dw={dw.T}", f"LogReg, db={db}", "", sep="\n")
             self._update(dw, db, learn_rate)
             if i % int(1. / print_frequency) == 0:
                 print(f"LogReg: iteration={i}, cost={cost}")
@@ -83,12 +79,10 @@ class NetBin:
             A = self.activation_functions[l](Z)
             self.signals.append(Z)
             self.activations.append(A)
-            # print(f"Net, layer={l}, A={A}")
         return NetBin.cost(self.activations[-1], y)
 
     @staticmethod
     def cost(y_pred, y_true):  # TODO regularisation
-        # print(f"Net, y_pred={y_pred}", f"y_true={y_true}", "", sep="\n")
         cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)
         return cost.squeeze()
 
@@ -114,15 +108,12 @@ class NetBin:
 
     # TODO need to test
     def _backward(self, y):
-        next_dA = NetBin.cost_deriv(self.activations[-1], y)  # initilise as dAL  # TODO problem could be here
-        # print(f"Net AL", f"{self.activations[-1]}", "", sep="\n")
+        next_dA = NetBin.cost_deriv(self.activations[-1], y)  # initilise as dAL
         weight_derivs = []
         bias_derivs = []
-        # print(f"Net signals (len signals={len(self.signals)})", f"{self.signals}", "", sep="\n")
         for l in range(1, len(self.layers))[::-1]:
-            g_prime_Z = self.activation_function_derivatives[l](self.signals[l])  # TODO problem could be here
-            dZ = np.multiply(next_dA, g_prime_Z)  # problem is here, since dZ doesn't match with logreg
-            # print(f"Net dZ", f"{dZ}", "", sep="\n")
+            g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
+            dZ = np.multiply(next_dA, g_prime_Z)
             dW = 1/len(y) * np.dot(dZ, self.activations[l-1].T)
             db = 1/len(y) * np.sum(dZ, axis=1, keepdims=True)
             weight_derivs.append(dW)
@@ -142,7 +133,6 @@ class NetBin:
         for i in range(num_iterations):
             cost = self._forward(X, y)
             weight_derivs, bias_derivs = self._backward(y)
-            # print(f"Net, dw={weight_derivs[1]}", f"Net, db={bias_derivs[1]}", "", sep="\n")
             self._update(weight_derivs, bias_derivs, learn_rate)
             if i % int(1. / print_frequency) == 0:  # TODO save these values and report afterwards? also checkpoint
                 print(f"NetBin: iteration={i}, cost={cost}")
@@ -167,7 +157,6 @@ if __name__ == '__main__':
     print("Forward:")
     cost = mynet._forward(X, y)
     print(f"cost={cost}", f"", "", sep="\n")
-    # print(NetBin.cost_deriv(np.expand_dims(np.array([0.5, 0.5, 0.5]), 1), np.expand_dims(np.array([0, 1, 1]), 1)))
     dW, db = mynet._backward(y)
 
     print("weights:")

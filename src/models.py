@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-EPSILON = 1e-8
+EPS = 1e-20
 # TODO regularisation? Class balancing?
 # TODO could check if this satisfies sci kit learn's api as a classifier
 
@@ -71,23 +71,23 @@ class NetBin:
     # NB will need to store the intermediate values
     def _forward(self, X, y):
         self.activations = []  # TODO may be more efficient to create single list in init and update its values
+        # TODO do we need to save all the activations at all?
         self.activations.append(X)  # activations of layer 0
         for l in range(1, len(self.layers)):
             Z = np.dot(self.weights[l], self.activations[l-1]) + self.biases[l]
             A = self.activation_functions[l](Z)
             self.signals.append(Z)
             self.activations.append(A)
-        return NetBin.cost(self.activations[-1], y)  # TODO move cost to common class
+        return NetBin.cost(self.activations[-1], y)
 
     @staticmethod
-    def cost(y_pred, y_true):
-        cost = np.sum(y_true * np.log(y_pred) + (1. - y_true) * np.log(1. - y_pred)) / -len(y_true)
+    def cost(y_pred, y_true):  # TODO regularisation
+        cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)
         return cost.squeeze()
 
     @staticmethod
     def cost_deriv(A, y):
-        # TODO move to more generic class, and allow generalisation to other cost functions
-        return - (np.divide(y, A) - np.divide(1 - y, 1 - A))
+        return - (np.divide(y, A+EPS) - np.divide(1 - y, (1.-A)+EPS))
 
     @staticmethod
     def sigmoid(z):
@@ -110,7 +110,7 @@ class NetBin:
         next_dA = NetBin.cost_deriv(self.activations[-1], y)  # initilise as dAL
         weight_derivs = []
         bias_derivs = []
-        for l in range(1, len(self.layers)-1)[::-1]:
+        for l in range(1, len(self.layers))[::-1]:
             g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
             dZ = np.multiply(next_dA, g_prime_Z)
             dW = 1/len(y) * np.dot(dZ, self.activations[l-1].T)
@@ -118,7 +118,34 @@ class NetBin:
             weight_derivs.append(dW)
             bias_derivs.append(db)
             next_dA = np.dot(self.weights[l].T, dZ)
-        return weight_derivs, bias_derivs
+        weight_derivs.append(np.array([None]))  # for the 0th layer
+        bias_derivs.append(np.array([None]))
+        return weight_derivs[::-1], bias_derivs[::-1]
+
+    def _update(self, weight_derivs, bias_derivs, learning_rate):
+        for l in range(1, len(self.layers)):
+            self.weights[l] = learning_rate * weight_derivs[l]
+            self.biases[l] -= learning_rate * bias_derivs[l]
+
+    # TODO public fit and predict methods
+
+    # TODO could return cost values during fitting.
+    def fit(self, X, y, learn_rate, num_iterations, print_frequency=0.1):
+        for i in range(num_iterations):
+            cost = self._forward(X, y)
+            weight_derivs, bias_derivs = self._backward(y)
+            self._update(weight_derivs, bias_derivs, learn_rate)
+            if i % int(1. / print_frequency) == 0:  # TODO save these values and report afterwards? also checkpoint
+                print(f"iteration={i}, cost={cost}")
+        return cost
+
+   # def predict(self, X):
+   #      A = X.copy()
+   #      for l in range(1, len(self.layers)):
+   #          Z = np.dot(self.weights[l], A) + self.biases[l]
+   #          A = self.activation_functions[l](Z)
+   #      y_pred = [int(a > self.predict_thresh) for a in A.squeeze()]
+   #      return y_pred
 
 
 if __name__ == '__main__':
@@ -132,6 +159,23 @@ if __name__ == '__main__':
     cost = mynet._forward(X, y)
     print(f"cost={cost}", f"", "", sep="\n")
     # print(NetBin.cost_deriv(np.expand_dims(np.array([0.5, 0.5, 0.5]), 1), np.expand_dims(np.array([0, 1, 1]), 1)))
-    print("Backward:")
     dW, db = mynet._backward(y)
-    print(f"dW=", dW, f"db=", db, "", sep="\n")
+
+    print("weights:")
+    for w in mynet.weights:
+        print(w.shape)
+    print()
+    print("weight derivatives")
+    for dw in dW:
+        print(dw.shape)
+    print()
+    print()
+    print("biases:")
+    for b in mynet.biases:
+        print(b.shape)
+    print()
+    print("bias derivatives")
+    for d_b in db:
+        print(d_b.shape)
+    print()
+    print(f"Final cost:", mynet.fit(X, y, 0.1, 500, print_frequency=0.1), "", sep="\n")

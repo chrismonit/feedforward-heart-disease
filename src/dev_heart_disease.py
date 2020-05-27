@@ -66,42 +66,43 @@ def heart_disease():
     y = y_train
 
     n_features, m = X.shape
-    n_iterations = int(1 * 2)
+    n_iterations = int(1 * 50)
     alpha = 0.001
     print(f"m={m}, n_features={n_features}", "", sep="\n")
     results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sensitivity', 'specificity', 'accuracy', 'tn', 'fp',
                                     'fn', 'tp'])
-    # print("Testing sklearn implementation of logistic regression")
-    #
-    # lr2 = LogisticRegression(penalty='none')
-    # lr2.fit(X.T, y)
-    # lr_y_pred_train = pd.Series(lr2.predict(X.T), index=X.T.index, name='predict')
-    # results = results.append(performance(y, lr_y_pred_train, model="skl_lr", dataset="train"), ignore_index=True)
-    #
-    # lr_y_pred_test = pd.Series(lr2.predict(X_test.T), index=X_test.T.index, name='predict')
-    # results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr", dataset="test"), ignore_index=True)
-    #
-    # print(f"Feature selection using RFECV", "", sep="\n")
-    # selector_lr = LogisticRegression(penalty='none')
-    # selector = RFECV(selector_lr, step=1, verbose=0)
-    # selector.fit(X.T, y)
-    # print(f"Features found by RFECV with sklearn implementation ({selector.n_features_}):",
-    #       X.T.loc[:, selector.support_].columns.to_numpy(), "", sep="\n")
-    #
-    # # plt.figure()
-    # # plt.xlabel("Number of features selected")
-    # # plt.ylabel("Cross validation score (nb of correct classifications)")
-    # # plt.plot(range(1, len(selector.grid_scores_) + 1), selector.grid_scores_)
-    # # plt.show()
-    #
-    # lr2 = LogisticRegression(penalty='none')
-    # lr2.fit(X.T.loc[:, selector.support_], y)
-    # lr_y_pred_train = pd.Series(lr2.predict(X.T.loc[:, selector.support_]), index=X.T.index, name='predict')
-    # results = results.append(performance(y, lr_y_pred_train, model="skl_lr_rfecv", dataset="train"), ignore_index=True)
-    #
-    # lr_y_pred_test = pd.Series(lr2.predict(X_test.T.loc[:, selector.support_]), index=X_test.T.index, name='predict')
-    # results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr_rfecv", dataset="test"),
-    #                          ignore_index=True)
+    print("Testing sklearn implementation of logistic regression")
+
+    lr2 = LogisticRegression(penalty='none')
+    lr2.fit(X.T, y)
+    lr_y_pred_train = pd.Series(lr2.predict(X.T), index=X.T.index, name='predict')
+    results = results.append(performance(y, lr_y_pred_train, model="skl_lr", dataset="train"), ignore_index=True)
+
+    lr_y_pred_test = pd.Series(lr2.predict(X_test.T), index=X_test.T.index, name='predict')
+    results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr", dataset="test"), ignore_index=True)
+
+    print(f"Feature selection using RFECV", "", sep="\n")
+    selector_lr = LogisticRegression(penalty='none')
+    selector = RFECV(selector_lr, step=1, verbose=0)
+    selector.fit(X.T, y)
+    print(f"Features found by RFECV with sklearn implementation ({selector.n_features_}):",
+          X.T.loc[:, selector.support_].columns.to_numpy(), "", sep="\n")
+
+    # plt.figure()
+    # plt.xlabel("Number of features selected")
+    # plt.ylabel("Cross validation score (nb of correct classifications)")
+    # plt.plot(range(1, len(selector.grid_scores_) + 1), selector.grid_scores_)
+    # plt.show()
+
+    lr2 = LogisticRegression(penalty='none')
+    lr2.fit(X.T.loc[:, selector.support_], y)
+    lr_y_pred_train = pd.Series(lr2.predict(X.T.loc[:, selector.support_]), index=X.T.index, name='predict')
+    results = results.append(performance(y, lr_y_pred_train, model="skl_lr_rfecv", dataset="train"), ignore_index=True)
+
+    lr_y_pred_test = pd.Series(lr2.predict(X_test.T.loc[:, selector.support_]), index=X_test.T.index, name='predict')
+    results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr_rfecv", dataset="test"),
+                             ignore_index=True)
+
     print("My models implementations:")
     model = LogReg(num_features=n_features)
 
@@ -124,6 +125,8 @@ def heart_disease():
     y_pred_train_net_logreg = pd.Series(my_net_logreg.predict(X), index=X.columns, name='predict')
     results = results.append(performance(y, y_pred_train_net_logreg, model="net_logreg", dataset="train"),
                              ignore_index=True)
+    net_y_pred_test = pd.Series(my_net_logreg.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, net_y_pred_test, model="net_logreg", dataset="test"), ignore_index=True)
 
     print()
     print(results.sort_values("dataset"))

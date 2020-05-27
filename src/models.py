@@ -21,8 +21,9 @@ class LogReg:
 
     @staticmethod
     def _backward(A, X, y):
+        # print(f"logreg A", f"{A}", "", sep="\n")
         dz = A - y
-        print(f"logreg dZ", f"{dz}", "", sep="\n")
+        # print(f"logreg dZ", f"{dz}", "", sep="\n")
         dw = np.dot(X, dz.T) / len(y)  # dz = A - Y
         # db = np.sum(dz) / len(y)
         db = np.sum(dz, axis=1, keepdims=True) / len(y)
@@ -67,7 +68,6 @@ class NetBin:
         self.layers = [num_features] + hidden_layers + [1]
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
-        self.signals = [np.array([None])]  # array of Z
         self.activation_functions = [None] + [NetBin.tanh]*len(hidden_layers) + [NetBin.sigmoid]
         self.activation_function_derivatives = [None] + [NetBin.tanh_deriv]*len(hidden_layers) + [NetBin.sigmoid_deriv]
         for l in range(1, len(self.layers)):
@@ -76,9 +76,8 @@ class NetBin:
 
     # NB will need to store the intermediate values
     def _forward(self, X, y):
-        self.activations = []  # TODO may be more efficient to create single list in init and update its values
-        # TODO do we need to save all the activations at all?
-        self.activations.append(X)  # activations of layer 0
+        self.activations = [X]
+        self.signals = [np.array([None])]  # array of Z
         for l in range(1, len(self.layers)):
             Z = np.dot(self.weights[l], self.activations[l-1]) + self.biases[l]
             A = self.activation_functions[l](Z)
@@ -115,13 +114,15 @@ class NetBin:
 
     # TODO need to test
     def _backward(self, y):
-        next_dA = NetBin.cost_deriv(self.activations[-1], y)  # initilise as dAL
+        next_dA = NetBin.cost_deriv(self.activations[-1], y)  # initilise as dAL  # TODO problem could be here
+        # print(f"Net AL", f"{self.activations[-1]}", "", sep="\n")
         weight_derivs = []
         bias_derivs = []
+        # print(f"Net signals (len signals={len(self.signals)})", f"{self.signals}", "", sep="\n")
         for l in range(1, len(self.layers))[::-1]:
-            g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
-            dZ = np.multiply(next_dA, g_prime_Z)
-            print(f"Net dZ", f"{dZ}", "", sep="\n")
+            g_prime_Z = self.activation_function_derivatives[l](self.signals[l])  # TODO problem could be here
+            dZ = np.multiply(next_dA, g_prime_Z)  # problem is here, since dZ doesn't match with logreg
+            # print(f"Net dZ", f"{dZ}", "", sep="\n")
             dW = 1/len(y) * np.dot(dZ, self.activations[l-1].T)
             db = 1/len(y) * np.sum(dZ, axis=1, keepdims=True)
             weight_derivs.append(dW)

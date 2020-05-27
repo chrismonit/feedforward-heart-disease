@@ -68,20 +68,9 @@ def heart_disease():
     n_features, m = X.shape
     n_iterations = int(1 * 50)
     alpha = 0.001
-    print(f"m={m}, n_features={n_features}", f"", "", sep="\n")
-
-    model = LogReg(num_features=n_features)
+    print(f"m={m}, n_features={n_features}", "", sep="\n")
     results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sensitivity', 'specificity', 'accuracy', 'tn', 'fp',
                                     'fn', 'tp'])
-    # print(f"LogReg initialised weights", f"{model.w}", "", sep="\n")
-    final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.1)
-    print(f"LogReg final cost", f"{final_cost}", "", sep="\n")
-
-    y_pred_train_lr = pd.Series(model.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, y_pred_train_lr, model="my_lr", dataset="train"), ignore_index=True)
-
-    y_pred_test = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, y_pred_test, model="my_lr", dataset="test"), ignore_index=True)
 
     print("Testing sklearn implementation of logistic regression")
 
@@ -114,6 +103,20 @@ def heart_disease():
     lr_y_pred_test = pd.Series(lr2.predict(X_test.T.loc[:, selector.support_]), index=X_test.T.index, name='predict')
     results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr_rfecv", dataset="test"),
                              ignore_index=True)
+
+    print("My models implementations:")
+    model = LogReg(num_features=n_features)
+
+    # print(f"LogReg initialised weights", f"{model.w}", "", sep="\n")
+    final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.1)
+    print(f"LogReg final cost", f"{final_cost}", "", sep="\n")
+
+    y_pred_train_lr = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, y_pred_train_lr, model="my_lr", dataset="train"), ignore_index=True)
+
+    y_pred_test = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, y_pred_test, model="my_lr", dataset="test"), ignore_index=True)
+
 
     print()
     print()

@@ -15,12 +15,13 @@ class LogReg:
     def _forward(self, X, y):
         Z = (np.dot(self.w.T, X) + self.b)
         A = self.sigmoid(Z)
+        # print(f"LogReg, A={A}")
         cost = self.cross_entropy_cost(A, y)
         return A, cost
 
     @staticmethod
     def _backward(A, X, y):
-        dz = A - y.values
+        dz = A - y
         dw = np.dot(X, dz.T) / len(y)  # dz = A - Y
         db = np.sum(dz) / len(y)
         return dw, db
@@ -31,9 +32,11 @@ class LogReg:
 
     # TODO could return cost values during fitting.
     def fit(self, X, y, learn_rate, num_iterations, print_frequency=0.1):
+        y = np.expand_dims(y, 0)
         for i in range(num_iterations):
             A, cost = self._forward(X, y)
             dw, db = self._backward(A, X, y)
+            # print(f"LogReg, dw={dw.T}", f"LogReg, db={db}", "", sep="\n")
             self._update(dw, db, learn_rate)
             if i % int(1. / print_frequency) == 0:
                 print(f"LogReg: iteration={i}, cost={cost}")
@@ -41,7 +44,7 @@ class LogReg:
 
     @staticmethod
     def cross_entropy_cost(y_pred, y_true):  # TODO assumes y_true is a series, but better if more generic
-        cost = np.sum(y_true.values * np.log(y_pred) + (1. - y_true.values) * np.log(1. - y_pred)) / -len(y_true)
+        cost = np.sum(y_true * np.log(y_pred) + (1. - y_true) * np.log(1. - y_pred)) / -len(y_true)
         return cost.squeeze()
 
     @staticmethod
@@ -57,7 +60,8 @@ class LogReg:
 
 # NB if hidden layers is empty, or has single value 0, should become logreg? something like that
 class NetBin:
-    def __init__(self, num_features, hidden_layers, w_init_scale=0.01):
+    def __init__(self, num_features, hidden_layers, w_init_scale=0.01, predict_thresh=0.5):
+        self.predict_thresh = predict_thresh
         self.layers = [num_features] + hidden_layers + [1]
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
@@ -78,10 +82,12 @@ class NetBin:
             A = self.activation_functions[l](Z)
             self.signals.append(Z)
             self.activations.append(A)
+            # print(f"Net, layer={l}, A={A}")
         return NetBin.cost(self.activations[-1], y)
 
     @staticmethod
     def cost(y_pred, y_true):  # TODO regularisation
+        # print(f"Net, y_pred={y_pred}", f"y_true={y_true}", "", sep="\n")
         cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)
         return cost.squeeze()
 
@@ -124,28 +130,27 @@ class NetBin:
 
     def _update(self, weight_derivs, bias_derivs, learning_rate):
         for l in range(1, len(self.layers)):
-            self.weights[l] = learning_rate * weight_derivs[l]
+            self.weights[l] -= learning_rate * weight_derivs[l]
             self.biases[l] -= learning_rate * bias_derivs[l]
 
-    # TODO public fit and predict methods
-
-    # TODO could return cost values during fitting.
+    # TODO could return cost values during fitting? Better to write to log file, or checkpoint
     def fit(self, X, y, learn_rate, num_iterations, print_frequency=0.1):
         for i in range(num_iterations):
             cost = self._forward(X, y)
             weight_derivs, bias_derivs = self._backward(y)
+            # print(f"Net, dw={weight_derivs[1]}", f"Net, db={bias_derivs[1]}", "", sep="\n")
             self._update(weight_derivs, bias_derivs, learn_rate)
             if i % int(1. / print_frequency) == 0:  # TODO save these values and report afterwards? also checkpoint
-                print(f"iteration={i}, cost={cost}")
+                print(f"NetBin: iteration={i}, cost={cost}")
         return cost
 
-   # def predict(self, X):
-   #      A = X.copy()
-   #      for l in range(1, len(self.layers)):
-   #          Z = np.dot(self.weights[l], A) + self.biases[l]
-   #          A = self.activation_functions[l](Z)
-   #      y_pred = [int(a > self.predict_thresh) for a in A.squeeze()]
-   #      return y_pred
+    def predict(self, X):  # TODO same logic as forward pass, can we combine these?
+        A = X.copy()
+        for l in range(1, len(self.layers)):
+            Z = np.dot(self.weights[l], A) + self.biases[l]
+            A = self.activation_functions[l](Z)
+        y_pred = [int(a > self.predict_thresh) for a in A.squeeze()]
+        return y_pred
 
 
 if __name__ == '__main__':
@@ -179,3 +184,4 @@ if __name__ == '__main__':
         print(d_b.shape)
     print()
     print(f"Final cost:", mynet.fit(X, y, 0.1, 500, print_frequency=0.1), "", sep="\n")
+    print(f"Predictions on training data", mynet.predict(X), "", sep="\n")

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 import src.preproc_cleveland as preproc_cleveland
 from src.models import LogReg
+from src.models import NetBin
 
 pd.options.display.width = 0  # adjust according to terminal width
 
@@ -65,15 +66,16 @@ def heart_disease():
     y = y_train
 
     n_features, m = X.shape
-    n_iterations = int(1 * 1e1)
+    n_iterations = int(1 * 50)
     alpha = 0.001
     print(f"m={m}, n_features={n_features}", f"", "", sep="\n")
 
     model = LogReg(num_features=n_features)
     results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sensitivity', 'specificity', 'accuracy', 'tn', 'fp',
                                     'fn', 'tp'])
-    final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.0001)
-    print(f"Final cost: {final_cost}", "", sep="\n")
+    # print(f"LogReg initialised weights", f"{model.w}", "", sep="\n")
+    final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=0.1)
+    print(f"LogReg final cost", f"{final_cost}", "", sep="\n")
 
     y_pred_train_lr = pd.Series(model.predict(X), index=X.columns, name='predict')
     results = results.append(performance(y, y_pred_train_lr, model="my_lr", dataset="train"), ignore_index=True)
@@ -113,7 +115,20 @@ def heart_disease():
     results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr_rfecv", dataset="test"),
                              ignore_index=True)
 
-    print(results)
+    print()
+    print()
+    my_net_logreg = NetBin(X.shape[0], [], w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
+    # print(f"net logreg initialised weights", f"{my_net_logreg.weights}", "", sep="\n")
+    # print(f"net logreg initialised biases", f"{my_net_logreg.biases}", "", sep="\n")
+    my_net_logreg_cost = my_net_logreg.fit(X, np.expand_dims(y, 0), alpha, n_iterations, print_frequency=0.1)
+    print(f"net_lr final cost", f"{my_net_logreg_cost}", "", sep="\n")
+    y_pred_train_net_logreg = pd.Series(my_net_logreg.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, y_pred_train_net_logreg, model="net_logreg", dataset="train"),
+                             ignore_index=True)
+
+    print()
+    print()
+    print(results.sort_values("dataset"))
 
 
 if __name__ == '__main__':

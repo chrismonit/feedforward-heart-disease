@@ -18,10 +18,6 @@ DATA_DIR = os.path.join(ROOT_DIR, "data")
 DEC = 3
 
 
-def sigmoid(z):
-    return 1./(1 + np.exp(-z))
-
-
 def standardise(df):
     means = df.mean()
     stds = df.std()
@@ -40,6 +36,37 @@ def performance(y_true, y_pred, model=np.nan, dataset=np.nan):
     result['roc_auc'] = metrics.roc_auc_score(y_true, y_pred)
     result.update(dict(zip(['tn', 'fp', 'fn', 'tp'], [tn, fp, fn, tp])))
     return result
+
+
+def sk_logreg(X, y, X_test, y_test):
+    """ Using sci kit learn implenentation of logistic regression """
+    lr2 = LogisticRegression(penalty='none')  # NB not using regularisation yet
+    lr2.fit(X.T, y)
+    lr_y_pred_train = pd.Series(lr2.predict(X.T), index=X.T.index, name='predict')
+    train_performance = performance(y, lr_y_pred_train, model="skl_lr", dataset="train")
+
+    lr_y_pred_test = pd.Series(lr2.predict(X_test.T), index=X_test.T.index, name='predict')
+    test_performance = performance(y_test, lr_y_pred_test, model="skl_lr", dataset="test")
+    return train_performance, test_performance
+
+
+def sk_logreg_rfecv(X, y, X_test, y_test):
+    """Feature selection using RFECV"""
+    selector_lr = LogisticRegression(penalty='none')
+    selector = RFECV(selector_lr, step=1, verbose=0)
+    selector.fit(X.T, y)
+    print(f"Features found by RFECV with sklearn implementation ({selector.n_features_}):",
+          X.T.loc[:, selector.support_].columns.to_numpy(), "", sep="\n")
+
+    lr2 = LogisticRegression(penalty='none')
+    lr2.fit(X.T.loc[:, selector.support_], y)
+    lr_y_pred_train = pd.Series(lr2.predict(X.T.loc[:, selector.support_]), index=X.T.index, name='predict')
+    train_performance = performance(y, lr_y_pred_train, model="skl_lr_rfecv", dataset="train")
+
+    lr_y_pred_test = pd.Series(lr2.predict(X_test.T.loc[:, selector.support_]), index=X_test.T.index, name='predict')
+    test_performance = performance(y_test, lr_y_pred_test, model="skl_lr_rfecv", dataset="test")
+    return train_performance, test_performance
+
 
 
 def heart_disease():
@@ -69,37 +96,14 @@ def heart_disease():
     print(f"m={m}, n_features={n_features}", "", sep="\n")
     results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sensitivity', 'specificity', 'accuracy', 'tn', 'fp',
                                     'fn', 'tp'])
-    print("Testing sklearn implementation of logistic regression")
 
-    lr2 = LogisticRegression(penalty='none')
-    lr2.fit(X.T, y)
-    lr_y_pred_train = pd.Series(lr2.predict(X.T), index=X.T.index, name='predict')
-    results = results.append(performance(y, lr_y_pred_train, model="skl_lr", dataset="train"), ignore_index=True)
+    sk_logreg_train_perform, sk_logreg_test_perform = sk_logreg(X, y, X_test, y_test)
+    results = results.append(sk_logreg_train_perform, ignore_index=True)
+    results = results.append(sk_logreg_test_perform, ignore_index=True)
 
-    lr_y_pred_test = pd.Series(lr2.predict(X_test.T), index=X_test.T.index, name='predict')
-    results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr", dataset="test"), ignore_index=True)
-
-    print(f"Feature selection using RFECV", "", sep="\n")
-    selector_lr = LogisticRegression(penalty='none')
-    selector = RFECV(selector_lr, step=1, verbose=0)
-    selector.fit(X.T, y)
-    print(f"Features found by RFECV with sklearn implementation ({selector.n_features_}):",
-          X.T.loc[:, selector.support_].columns.to_numpy(), "", sep="\n")
-
-    # plt.figure()
-    # plt.xlabel("Number of features selected")
-    # plt.ylabel("Cross validation score (nb of correct classifications)")
-    # plt.plot(range(1, len(selector.grid_scores_) + 1), selector.grid_scores_)
-    # plt.show()
-
-    lr2 = LogisticRegression(penalty='none')
-    lr2.fit(X.T.loc[:, selector.support_], y)
-    lr_y_pred_train = pd.Series(lr2.predict(X.T.loc[:, selector.support_]), index=X.T.index, name='predict')
-    results = results.append(performance(y, lr_y_pred_train, model="skl_lr_rfecv", dataset="train"), ignore_index=True)
-
-    lr_y_pred_test = pd.Series(lr2.predict(X_test.T.loc[:, selector.support_]), index=X_test.T.index, name='predict')
-    results = results.append(performance(y_test, lr_y_pred_test, model="skl_lr_rfecv", dataset="test"),
-                             ignore_index=True)
+    sk_logreg_rfecv_train_perform, sk_logreg_rfecv_test_perform = sk_logreg_rfecv(X, y, X_test, y_test)
+    results = results.append(sk_logreg_rfecv_train_perform, ignore_index=True)
+    results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
 
     print("My models implementations:")
     n_iterations = int(1 * 10)
@@ -116,7 +120,6 @@ def heart_disease():
 
     y_pred_test = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
     results = results.append(performance(y_test, y_pred_test, model="my_lr", dataset="test"), ignore_index=True)
-
 
     my_net_logreg = NetBin(X.shape[0], [], w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
     # print(f"net logreg initialised weights", f"{my_net_logreg.weights}", "", sep="\n")

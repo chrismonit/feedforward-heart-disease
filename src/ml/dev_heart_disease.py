@@ -68,7 +68,6 @@ def sk_logreg_rfecv(X, y, X_test, y_test):
     return train_performance, test_performance
 
 
-
 def heart_disease():
     np.random.seed(10)
     LABEL = 'disease'
@@ -97,43 +96,60 @@ def heart_disease():
     results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sensitivity', 'specificity', 'accuracy', 'tn', 'fp',
                                     'fn', 'tp'])
 
-    sk_logreg_train_perform, sk_logreg_test_perform = sk_logreg(X, y, X_test, y_test)
-    results = results.append(sk_logreg_train_perform, ignore_index=True)
-    results = results.append(sk_logreg_test_perform, ignore_index=True)
+    # sk_logreg_train_perform, sk_logreg_test_perform = sk_logreg(X, y, X_test, y_test)
+    # results = results.append(sk_logreg_train_perform, ignore_index=True)
+    # results = results.append(sk_logreg_test_perform, ignore_index=True)
+    #
+    # sk_logreg_rfecv_train_perform, sk_logreg_rfecv_test_perform = sk_logreg_rfecv(X, y, X_test, y_test)
+    # results = results.append(sk_logreg_rfecv_train_perform, ignore_index=True)
+    # results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
 
-    sk_logreg_rfecv_train_perform, sk_logreg_rfecv_test_perform = sk_logreg_rfecv(X, y, X_test, y_test)
-    results = results.append(sk_logreg_rfecv_train_perform, ignore_index=True)
-    results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
-
-    print("My models implementations:")
-    n_iterations = int(1 * 10)
-    print_frequency = 0.25
+    n_iterations = int(1 * 1e3)
+    n_print_statements = 5
+    print_frequency = n_print_statements / n_iterations
     alpha = 0.001
-    model = LogReg(num_features=n_features)
 
-    # print(f"LogReg initialised weights", f"{model.w}", "", sep="\n")
-    final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=print_frequency)
-    print(f"LogReg final cost", f"{final_cost}", "", sep="\n")
+    # print("My implementation of logistic regression:")
+    # model = LogReg(num_features=n_features)
+    # final_cost = model.fit(X, y, alpha, num_iterations=n_iterations, print_frequency=print_frequency)
+    # y_pred_train_lr = pd.Series(model.predict(X), index=X.columns, name='predict')
+    # results = results.append(performance(y, y_pred_train_lr, model="my_lr", dataset="train"), ignore_index=True)
+    # y_pred_test = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    # results = results.append(performance(y_test, y_pred_test, model="my_lr", dataset="test"), ignore_index=True)
 
-    y_pred_train_lr = pd.Series(model.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, y_pred_train_lr, model="my_lr", dataset="train"), ignore_index=True)
-
-    y_pred_test = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, y_pred_test, model="my_lr", dataset="test"), ignore_index=True)
-
-    my_net_logreg = NetBin(X.shape[0], [], w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
-    # print(f"net logreg initialised weights", f"{my_net_logreg.weights}", "", sep="\n")
-    # print(f"net logreg initialised biases", f"{my_net_logreg.biases}", "", sep="\n")
-    my_net_logreg_cost = my_net_logreg.fit(X, np.expand_dims(y, 0), alpha, n_iterations,
+    print("My implementation of network with single unit (logreg clone):")
+    net_logreg = NetBin(X.shape[0], [], w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
+    net_logreg_cost = net_logreg.fit(X, np.expand_dims(y, 0), alpha, n_iterations,
                                            print_frequency=print_frequency)
-    print(f"net_lr final cost", f"{my_net_logreg_cost}", "", sep="\n")
-    y_pred_train_net_logreg = pd.Series(my_net_logreg.predict(X), index=X.columns, name='predict')
+    y_pred_train_net_logreg = pd.Series(net_logreg.predict(X), index=X.columns, name='predict')
     results = results.append(performance(y, y_pred_train_net_logreg, model="net_logreg", dataset="train"),
                              ignore_index=True)
-    net_y_pred_test = pd.Series(my_net_logreg.predict(X_test), index=X_test.columns, name='predict')
+    net_y_pred_test = pd.Series(net_logreg.predict(X_test), index=X_test.columns, name='predict')
     results = results.append(performance(y_test, net_y_pred_test, model="net_logreg", dataset="test"),
                              ignore_index=True)
 
+    print("Net implementation of logreg using random initial weights")
+    model = NetBin(X.shape[0], [], w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iterations,
+                                           print_frequency=print_frequency)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, train_pred, model="net_logreg_randinit", dataset="train"),
+                             ignore_index=True)
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, test_pred, model="net_logreg_randinit", dataset="test"),
+                             ignore_index=True)
+
+    print("Architecture 2_1")
+    model = NetBin(X.shape[0], [2], w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iterations,
+                                           print_frequency=print_frequency)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, train_pred, model="net_2_1", dataset="train"),
+                             ignore_index=True)
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, test_pred, model="net_2_1", dataset="test"),
+                             ignore_index=True)
+    # Notes: looks like we already need to implement regularisation
     print()
     print(results.sort_values("dataset"))
 

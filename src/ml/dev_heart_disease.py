@@ -7,13 +7,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import RFECV
 import matplotlib.pyplot as plt
 
-import src.preproc_cleveland as preproc_cleveland
-from src.models import LogReg
-from src.models import NetBin
+import preproc_cleveland
+from models import LogReg
+from models import NetBin
 
 pd.options.display.width = 0  # adjust according to terminal width
 
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))  # assuming this file in <proj_root>/src/<package>
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 DEC = 3
 

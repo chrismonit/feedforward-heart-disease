@@ -63,38 +63,44 @@ class NetBin:
         self.layers = [num_features] + hidden_layers + [1]
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
-        self.activation_functions = [None] + [NetBin.tanh]*len(hidden_layers) + [NetBin.sigmoid]
-        self.activation_function_derivatives = [None] + [NetBin.tanh_deriv]*len(hidden_layers) + [NetBin.sigmoid_deriv]
+        self.activation_functions = [None] + [NetBin._tanh] * len(hidden_layers) + [NetBin._sigmoid]
+        self.activation_function_derivatives = [None] + [NetBin._tanh_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
         for l in range(1, len(self.layers)):
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))
 
     @staticmethod
-    def cost(y_pred, y_true):
+    def _cost(y_pred, y_true):
         cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)
         return cost.squeeze()
 
     @staticmethod
-    def cost_deriv(A, y):
+    def _cost_deriv(A, y):
         return - (np.divide(y, A+EPS) - np.divide(1 - y, (1.-A)+EPS))
 
     @staticmethod
-    def sigmoid(z):
+    def _sigmoid(z):
         return 1. / (1 + np.exp(-z))
 
     @staticmethod
-    def sigmoid_deriv(Z):
+    def _sigmoid_deriv(Z):
         return LogReg.sigmoid(Z) * (1 - LogReg.sigmoid(Z))
 
     @staticmethod
-    def tanh(Z):
+    def _tanh(Z):
         return np.tanh(Z)
 
     @staticmethod
-    def tanh_deriv(Z):
+    def _tanh_deriv(Z):
         return 1 - np.power(np.tanh(Z), 2)
 
-    def _forward(self, X, y):
+    def _regularisation(self, reg_param, n_cases):  # TODO should be a wrapper for other functions
+        """Regularisation by weight decay, ie Frobenius norm of weights. Does nothing with biases"""
+        # TODO this is memory inefficient, no need to have list of norm values
+        sum_frob = np.sum([np.linalg.norm(self.weights[l], ord='fro') for l in range(1, len(self.layers))])
+        return (reg_param / (2 * n_cases)) * sum_frob
+
+    def _forward(self, X, y, reg_param=0):
         self.activations = [X]
         self.signals = [np.array([None])]  # array of Z
         for l in range(1, len(self.layers)):
@@ -102,10 +108,10 @@ class NetBin:
             A = self.activation_functions[l](Z)
             self.signals.append(Z)
             self.activations.append(A)
-        return NetBin.cost(self.activations[-1], y)
+        return NetBin._cost(self.activations[-1], y) + self._regularisation(reg_param, X.shape[1])
 
     def _backward(self, y):
-        next_dA = NetBin.cost_deriv(self.activations[-1], y)  # initilise as dAL
+        next_dA = NetBin._cost_deriv(self.activations[-1], y)  # initilise as dAL
         weight_derivs = []
         bias_derivs = []
         for l in range(1, len(self.layers))[::-1]:
@@ -148,31 +154,20 @@ class NetBin:
 if __name__ == '__main__':
     np.random.seed(10)
     num_features, m = 2, 5
-    mynet = NetBin(num_features, [3, 5, 4, 2], w_init_scale=1)
+    model = NetBin(num_features, [], w_init_scale=1)
     X = np.random.randn(num_features, m)
     y = np.expand_dims(np.array([1]*m), 0)
+    print(f"X={X}", f"y={y}", "", sep="\n")
 
-    print("Forward:")
-    cost = mynet._forward(X, y)
-    print(f"cost={cost}", f"", "", sep="\n")
-    dW, db = mynet._backward(y)
+    print(f"model weights={model.weights}", "", sep="\n")
+    cost_no_reg = model._forward(X, y, reg_param=0)
+    print(f"cost without reg={cost_no_reg}", "", sep="\n")
 
-    print("weights:")
-    for w in mynet.weights:
-        print(w.shape)
-    print()
-    print("weight derivatives")
-    for dw in dW:
-        print(dw.shape)
-    print()
-    print()
-    print("biases:")
-    for b in mynet.biases:
-        print(b.shape)
-    print()
-    print("bias derivatives")
-    for d_b in db:
-        print(d_b.shape)
-    print()
-    print(f"Final cost:", mynet.fit(X, y, 0.1, 500, print_frequency=0.1), "", sep="\n")
-    print(f"Predictions on training data", mynet.predict(X), "", sep="\n")
+    reg = 1
+    print(f"reg term={model._regularisation(reg, m)}", "", sep="\n")
+    cost_reg = model._forward(X, y, reg_param=reg)
+    print(f"cost with reg ({reg}) = {cost_reg}", f"", "", sep="\n")
+    # dW, db = mynet._backward(y)
+
+    # print(f"Final cost:", mynet.fit(X, y, 0.1, 500, print_frequency=0.1), "", sep="\n")
+    # print(f"Predictions on training data", mynet.predict(X), "", sep="\n")

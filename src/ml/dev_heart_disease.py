@@ -104,7 +104,7 @@ def heart_disease():
     # results = results.append(sk_logreg_rfecv_train_perform, ignore_index=True)
     # results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
 
-    n_iterations = int(1 * 1e3)
+    n_iterations = int(5 * 1e3)
     n_print_statements = 5
     print_frequency = n_print_statements / n_iterations
     alpha = 0.001
@@ -149,9 +149,32 @@ def heart_disease():
     test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
     results = results.append(performance(y_test, test_pred, model="net_2_1", dataset="test"),
                              ignore_index=True)
+
+    print("Architecture 3_1")
+    model = NetBin(X.shape[0], [3], w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iterations,
+                     print_frequency=print_frequency)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, train_pred, model="net_3_1", dataset="train"),
+                             ignore_index=True)
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, test_pred, model="net_3_1", dataset="test"),
+                             ignore_index=True)
+
+    print("Architecture 10_8_1")
+    model = NetBin(X.shape[0], [10, 8], w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iterations,
+                     print_frequency=print_frequency)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, train_pred, model="net_10_8_1", dataset="train"),
+                             ignore_index=True)
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, test_pred, model="net_10_8_1", dataset="test"),
+                             ignore_index=True)
+
     # Notes: looks like we already need to implement regularisation
     print()
-    print(results.sort_values("dataset"))
+    print(results.sort_values(["dataset", "model"]))
 
 
 if __name__ == '__main__':

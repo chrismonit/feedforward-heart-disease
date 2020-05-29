@@ -21,9 +21,9 @@ class LogReg:
     @staticmethod
     def _backward(A, X, y):
         dz = A - y
-        dw = np.dot(X, dz.T) / len(y)  # dz = A - Y
+        dw = np.dot(X, dz.T) / len(y)  # dz = A - Y  # TODO warning, may need to be using y.shape[1] instead
         # db = np.sum(dz) / len(y)
-        db = np.sum(dz, axis=1, keepdims=True) / len(y)
+        db = np.sum(dz, axis=1, keepdims=True) / len(y)  # TODO warning, may need to be using y.shape[1] instead
         return dw, db
 
     def _update(self, dw, db, learn_rate):
@@ -71,7 +71,7 @@ class NetBin:
 
     @staticmethod
     def _cost(y_pred, y_true):
-        cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)
+        cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)  # TODO possible bug, need y.shape[1] instead
         return cost.squeeze()
 
     @staticmethod
@@ -110,15 +110,16 @@ class NetBin:
             self.activations.append(A)
         return NetBin._cost(self.activations[-1], y) + self._regularisation(reg_param, X.shape[1])
 
-    def _backward(self, y):
+    def _backward(self, y, reg_param=0):
         next_dA = NetBin._cost_deriv(self.activations[-1], y)  # initilise as dAL
         weight_derivs = []
         bias_derivs = []
         for l in range(1, len(self.layers))[::-1]:
             g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
             dZ = np.multiply(next_dA, g_prime_Z)
-            dW = 1/len(y) * np.dot(dZ, self.activations[l-1].T)
-            db = 1/len(y) * np.sum(dZ, axis=1, keepdims=True)
+            reg_term = (reg_param / y.shape[1]) * self.weights[l]
+            dW = 1/y.shape[1] * np.dot(dZ, self.activations[l-1].T) + reg_term
+            db = 1/y.shape[1] * np.sum(dZ, axis=1, keepdims=True)  # TODO this has changed, need to test backprop
             weight_derivs.append(dW)
             bias_derivs.append(db)
             next_dA = np.dot(self.weights[l].T, dZ)
@@ -154,20 +155,40 @@ class NetBin:
 if __name__ == '__main__':
     np.random.seed(10)
     num_features, m = 2, 5
-    model = NetBin(num_features, [], w_init_scale=1)
+    model = NetBin(num_features, [2, 2], w_init_scale=1)
     X = np.random.randn(num_features, m)
     y = np.expand_dims(np.array([1]*m), 0)
     print(f"X={X}", f"y={y}", "", sep="\n")
 
-    print(f"model weights={model.weights}", "", sep="\n")
+    print(f"model weights")
+    for w in model.weights:
+        print(w)
+    print()
+
     cost_no_reg = model._forward(X, y, reg_param=0)
     print(f"cost without reg={cost_no_reg}", "", sep="\n")
 
-    reg = 1
+    reg = 10
     print(f"reg term={model._regularisation(reg, m)}", "", sep="\n")
     cost_reg = model._forward(X, y, reg_param=reg)
-    print(f"cost with reg ({reg}) = {cost_reg}", f"", "", sep="\n")
+    print(f"cost with reg ({reg}) = {cost_reg}", "", sep="\n")
     # dW, db = mynet._backward(y)
+
+    print("backward, without reg")
+    weight_derivs, bias_derivs = model._backward(y, reg_param=0)
+    for dw in weight_derivs:
+        print(dw)
+    for db in bias_derivs:
+        print(db)
+    print()
+
+    reg = 1
+    print(f"backward, with reg={reg}")
+    weight_derivs, bias_derivs = model._backward(y, reg_param=1)
+    for dw in weight_derivs:
+        print(dw)
+    for db in bias_derivs:
+        print(db)
 
     # print(f"Final cost:", mynet.fit(X, y, 0.1, 500, print_frequency=0.1), "", sep="\n")
     # print(f"Predictions on training data", mynet.predict(X), "", sep="\n")

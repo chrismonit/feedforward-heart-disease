@@ -115,7 +115,7 @@ def heart_disease():
     # results = results.append(sk_logreg_rfecv_train_perform, ignore_index=True)
     # results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
 
-    n_iter = int(1 * 1e3)
+    n_iter = int(1 * 1e4)
     alpha = 0.1
     n_print_statements = 10
     print_freq = n_print_statements / n_iter
@@ -124,26 +124,36 @@ def heart_disease():
     # results = results.append(logreg_train_perform, ignore_index=True)
     # results = results.append(logreg_test_perform, ignore_index=True)
 
-    print("My implementation of network with single unit (logreg clone):")
-    net_logreg = NetBin(X.shape[0], [], w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
+    architecture, reg_param = [], 0
+    name = "1:" + str(reg_param)
+    print(f"Running model {name}")
+    net_logreg = NetBin(X.shape[0], architecture, w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
     net_logreg_cost = net_logreg.fit(X, np.expand_dims(y, 0), alpha, n_iter, print_frequency=print_freq)
     y_pred_train_net_logreg = pd.Series(net_logreg.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, y_pred_train_net_logreg, model="net_1", dataset="train"),
-                             ignore_index=True)
+    results = results.append(performance(y, y_pred_train_net_logreg, model=name, dataset="train"), ignore_index=True)
     net_y_pred_test = pd.Series(net_logreg.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, net_y_pred_test, model="net_1", dataset="test"),
-                             ignore_index=True)
+    results = results.append(performance(y_test, net_y_pred_test, model=name, dataset="test"), ignore_index=True)
 
-    print("Architecture 2_1")  # TODO test with and without regularisation
-    model = NetBin(X.shape[0], [2], w_init_scale=0.01)
+    architecture, reg_param = [2], 0
+    name = "_".join([str(units) for units in architecture+[1]]) + ":" + str(reg_param)
+    print(f"Running model {name}")
+    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
     cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, print_frequency=print_freq)
     train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, train_pred, model="net_2_1", dataset="train"),
-                             ignore_index=True)
+    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
     test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, test_pred, model="net_2_1", dataset="test"),
-                             ignore_index=True)
-    # Notes: looks like we already need to implement regularisation
+    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+
+    architecture, reg_param = [2], 1
+    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
+    print(f"Running model {name}")
+    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, print_frequency=print_freq)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+
     print()
     print(results.sort_values(["dataset", "model"]).round(DEC))
 

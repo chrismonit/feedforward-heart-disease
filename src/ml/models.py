@@ -100,7 +100,7 @@ class NetBin:
         sum_frob = np.sum([np.linalg.norm(self.weights[l], ord='fro') for l in range(1, len(self.layers))])
         return (reg_param / (2 * n_cases)) * sum_frob
 
-    def _forward(self, X, y, reg_param=0):
+    def _forward(self, X, y, reg_param):
         self.activations = [X]
         self.signals = [np.array([None])]  # array of Z
         for l in range(1, len(self.layers)):
@@ -110,7 +110,7 @@ class NetBin:
             self.activations.append(A)
         return NetBin._cost(self.activations[-1], y) + self._regularisation(reg_param, X.shape[1])
 
-    def _backward(self, y, reg_param=0):
+    def _backward(self, y, reg_param):
         next_dA = NetBin._cost_deriv(self.activations[-1], y)  # initilise as dAL
         weight_derivs = []
         bias_derivs = []
@@ -134,10 +134,10 @@ class NetBin:
 
     # TODO could return cost values during fitting? Better to write to log file, or checkpoint
     #  or like a file buffer, which can be on disk or stdout
-    def fit(self, X, y, learn_rate, num_iterations, print_frequency=0.1):
+    def fit(self, X, y, learn_rate, num_iterations, reg_param=0, print_frequency=0.1):
         for i in range(num_iterations):
-            cost = self._forward(X, y)
-            weight_derivs, bias_derivs = self._backward(y)
+            cost = self._forward(X, y, reg_param)
+            weight_derivs, bias_derivs = self._backward(y, reg_param)
             self._update(weight_derivs, bias_derivs, learn_rate)
             if i % int(1. / print_frequency) == 0:  # TODO save these values and report afterwards? also checkpoint
                 print(f"NetBin: iteration={i}, cost={cost}")

@@ -116,8 +116,8 @@ def heart_disease():
     # results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
 
     n_iter = int(1 * 1e3)
-    alpha = 0.001
-    n_print_statements = 5
+    alpha = 0.1
+    n_print_statements = 10
     print_freq = n_print_statements / n_iter
 
     # logreg_train_perform, logreg_test_perform = logreg(X, y, X_test, y_test, n_features, alpha, n_iter, print_freq)

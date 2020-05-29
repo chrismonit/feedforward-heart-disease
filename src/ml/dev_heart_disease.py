@@ -120,9 +120,9 @@ def heart_disease():
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
 
-    logreg_train_perform, logreg_test_perform = logreg(X, y, X_test, y_test, n_features, alpha, n_iter, print_freq)
-    results = results.append(logreg_train_perform, ignore_index=True)
-    results = results.append(logreg_test_perform, ignore_index=True)
+    # logreg_train_perform, logreg_test_perform = logreg(X, y, X_test, y_test, n_features, alpha, n_iter, print_freq)
+    # results = results.append(logreg_train_perform, ignore_index=True)
+    # results = results.append(logreg_test_perform, ignore_index=True)
 
     print("My implementation of network with single unit (logreg clone):")
     net_logreg = NetBin(X.shape[0], [], w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
@@ -136,15 +136,13 @@ def heart_disease():
 
     print("Architecture 2_1")  # TODO test with and without regularisation
     model = NetBin(X.shape[0], [2], w_init_scale=0.01)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter,
-                                           print_frequency=print_freq)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, print_frequency=print_freq)
     train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
     results = results.append(performance(y, train_pred, model="net_2_1", dataset="train"),
                              ignore_index=True)
     test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
     results = results.append(performance(y_test, test_pred, model="net_2_1", dataset="test"),
                              ignore_index=True)
-
     # Notes: looks like we already need to implement regularisation
     print()
     print(results.sort_values(["dataset", "model"]).round(DEC))

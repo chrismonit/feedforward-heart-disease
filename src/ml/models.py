@@ -57,7 +57,6 @@ class LogReg:
         return y_pred
 
 
-# NB if hidden layers is empty, or has single value 0, should become logreg? something like that
 class NetBin:
     def __init__(self, num_features, hidden_layers, w_init_scale=0.01, predict_thresh=0.5):
         self.predict_thresh = predict_thresh
@@ -70,19 +69,8 @@ class NetBin:
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))
 
-    # NB will need to store the intermediate values
-    def _forward(self, X, y):
-        self.activations = [X]
-        self.signals = [np.array([None])]  # array of Z
-        for l in range(1, len(self.layers)):
-            Z = np.dot(self.weights[l], self.activations[l-1]) + self.biases[l]
-            A = self.activation_functions[l](Z)
-            self.signals.append(Z)
-            self.activations.append(A)
-        return NetBin.cost(self.activations[-1], y)
-
     @staticmethod
-    def cost(y_pred, y_true):  # TODO regularisation
+    def cost(y_pred, y_true):
         cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)
         return cost.squeeze()
 
@@ -106,7 +94,16 @@ class NetBin:
     def tanh_deriv(Z):
         return 1 - np.power(np.tanh(Z), 2)
 
-    # TODO need to test
+    def _forward(self, X, y):
+        self.activations = [X]
+        self.signals = [np.array([None])]  # array of Z
+        for l in range(1, len(self.layers)):
+            Z = np.dot(self.weights[l], self.activations[l - 1]) + self.biases[l]
+            A = self.activation_functions[l](Z)
+            self.signals.append(Z)
+            self.activations.append(A)
+        return NetBin.cost(self.activations[-1], y)
+
     def _backward(self, y):
         next_dA = NetBin.cost_deriv(self.activations[-1], y)  # initilise as dAL
         weight_derivs = []
@@ -129,6 +126,7 @@ class NetBin:
             self.biases[l] -= learning_rate * bias_derivs[l]
 
     # TODO could return cost values during fitting? Better to write to log file, or checkpoint
+    #  or like a file buffer, which can be on disk or stdout
     def fit(self, X, y, learn_rate, num_iterations, print_frequency=0.1):
         for i in range(num_iterations):
             cost = self._forward(X, y)

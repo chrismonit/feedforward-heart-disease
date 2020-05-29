@@ -147,6 +147,8 @@ def heart_disease():
     print()
     print(results.sort_values(["dataset", "model"]).round(DEC))
 
+    # TODO class balancing? implement other gradient descent algorithms?
+
 
 if __name__ == '__main__':
     heart_disease()

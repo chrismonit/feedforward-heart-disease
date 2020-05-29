@@ -115,9 +115,9 @@ def heart_disease():
     # results = results.append(sk_logreg_rfecv_train_perform, ignore_index=True)
     # results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
 
-    n_iter = int(1 * 1e4)
-    alpha = 0.1
-    n_print_statements = 10
+    n_iter = int(2 * 1e4)
+    alpha = 0.15
+    n_print_statements = 5
     print_freq = n_print_statements / n_iter
 
     # logreg_train_perform, logreg_test_perform = logreg(X, y, X_test, y_test, n_features, alpha, n_iter, print_freq)
@@ -138,7 +138,7 @@ def heart_disease():
     name = "_".join([str(units) for units in architecture+[1]]) + ":" + str(reg_param)
     print(f"Running model {name}")
     model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, print_frequency=print_freq)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
     train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
     results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
     test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
@@ -148,7 +148,37 @@ def heart_disease():
     name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
     print(f"Running model {name}")
     model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, print_frequency=print_freq)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+
+    architecture, reg_param = [2], 2.5
+    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
+    print(f"Running model {name}")
+    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+
+    architecture, reg_param = [2, 2], 0
+    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
+    print(f"Running model {name}")
+    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+
+    architecture, reg_param = [2, 2], 1
+    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
+    print(f"Running model {name}")
+    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
     train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
     results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
     test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')

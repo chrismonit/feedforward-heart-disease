@@ -106,7 +106,7 @@ def quant_hist_compare(df, label, n_bins=20):
     for i in [0, 1, 2]:
         axes[i, 0].set_ylabel("Density")
     plt.subplots_adjust(hspace=0.4, wspace=0.3)
-    output_path = os.path.join(OUT_DIR, "quantitatives_plot.pdf")
+    output_path = os.path.join(OUT_DIR, "quantitatives_plot.png")
     plt.savefig(output_path)
     print(f"Quantitative feature distribution plots saved to {output_path}", f"", "", sep="\n")
     # plt.show()  # TODO show legend?
@@ -137,7 +137,7 @@ def cat_bar_compare(df, label):
     for i in [0, 1, 2, 3]:
         axes[i, 0].set_ylabel("Relative frequency")
     plt.subplots_adjust(hspace=0.4, wspace=0.3)
-    output_path = os.path.join(OUT_DIR, "categoricals_plot.pdf")
+    output_path = os.path.join(OUT_DIR, "categoricals_plot.png")
     plt.savefig(output_path)
     print(f"Categorical feature distribution plots saved to {output_path}", f"", "", sep="\n")
     # plt.show()

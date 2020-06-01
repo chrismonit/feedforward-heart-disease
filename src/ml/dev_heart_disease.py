@@ -25,10 +25,9 @@ def standardise(df):
     return standardised, means, stds
 
 
-def performance(y_true, y_pred, model=np.nan, dataset=np.nan):
+def performance(y_true, y_pred, dataset=np.nan):
     result = {}
     tn, fp, fn, tp = metrics.confusion_matrix(y_true, y_pred).ravel()
-    result['model'] = model
     result['dataset'] = dataset
     result['acc.'] = (tn + tp) / (tn + fp + fn + tp)
     result['sens.'] = tp / (tp + fn) if (tp + fn) != 0 else np.nan
@@ -82,15 +81,15 @@ def logreg(X, y, X_test, y_test, n_features, alpha, n_iterations, print_frequenc
 def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1, n_iter=1e2, reg_param=0,
                print_freq=0.1):
     """Instantiate, train and evaluate a neural network model"""
-    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
-    print(f"Running model {name}")
+    architecture_str = "_".join([str(units) for units in architecture + [1]])
+    model_info = {'arch.': architecture_str, 'init': weight_scale, 'alpha': alpha, 'n_iter': n_iter, 'reg': reg_param}
     model = NetBin(X.shape[0], architecture, w_init_scale=weight_scale)
     cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
     train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
-    train_performance = performance(y, train_pred, model=name, dataset="train")
+    train_performance = performance(y, train_pred, dataset="train")
     test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    test_performance = performance(y_test, test_pred, model=name, dataset="test")
-    return train_performance, test_performance
+    test_performance = performance(y_test, test_pred, dataset="test")
+    return {**model_info, **train_performance}, {**model_info, **test_performance}
 
 
 def heart_disease():
@@ -107,7 +106,7 @@ def heart_disease():
 
     labels = data[LABEL]
     measurements = data.drop(LABEL, axis=1)
-    X_train, X_test, y_train, y_test = train_test_split(measurements, labels, test_size=0.33)
+    X_train, X_test, y_train, y_test = train_test_split(measurements, labels, test_size=0.25)
 
     X_train_scaled, X_train_means, X_train_stds = standardise(X_train)
     X_test_scaled = (X_test - X_train_means).div(X_train_stds)
@@ -118,20 +117,22 @@ def heart_disease():
 
     n_features, m = X.shape
     print(f"m={m}, n_features={n_features}", "", sep="\n")
-    results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp',
-                                    'fn', 'tp'])
+    results = pd.DataFrame(columns=['arch.', 'init', 'alpha', 'n_iter', 'reg', 'dataset',
+                                    'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp',  'fn', 'tp'])
     n_iter = int(1 * 1e4)
     alpha = 0.15
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
 
-    for architecture in [ [2], [2, 2] ]:
-        for reg_param in [0, 1, 2, 3, 4]:
-            train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture, weight_scale=1,
-                                                   alpha=alpha,
-                                                   n_iter=n_iter, reg_param=reg_param, print_freq=print_freq)
-            results = results.append(train_result, ignore_index=True)
-            results = results.append(test_result, ignore_index=True)
+    for architecture in [[2, 2]]:  # TODO could make these more systemtic, for plots
+        for reg_param in [0, 1, 2, 3]:
+            for w_init in [10]:
+                for alpha in [0.1, 0.2, 0.3]:
+                    train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture,
+                                                           weight_scale=w_init, alpha=alpha,
+                                                           n_iter=n_iter, reg_param=reg_param, print_freq=print_freq)
+                    results = results.append(train_result, ignore_index=True)
+                    results = results.append(test_result, ignore_index=True)
 
     print()
     print(results[results['dataset'] == 'test'].sort_values(['roc_auc'], ascending=False).round(DEC))

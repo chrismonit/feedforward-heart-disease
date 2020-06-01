@@ -79,11 +79,12 @@ def logreg(X, y, X_test, y_test, n_features, alpha, n_iterations, print_frequenc
     return train_performance, test_performance
 
 
-def experiment(X, y, X_test, y_test, architecture=[], alpha=1, n_iter=1e2, reg_param=0, print_freq=0.1):
+def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1, n_iter=1e2, reg_param=0,
+               print_freq=0.1):
     """Instantiate, train and evaluate a neural network model"""
     name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
     print(f"Running model {name}")
-    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
+    model = NetBin(X.shape[0], architecture, w_init_scale=weight_scale)
     cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
     train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
     train_performance = performance(y, train_pred, model=name, dataset="train")
@@ -95,15 +96,15 @@ def experiment(X, y, X_test, y_test, architecture=[], alpha=1, n_iter=1e2, reg_p
 def heart_disease():
     np.random.seed(10)
     LABEL = 'disease'
-    DROP_FIRST = False
-    signal_catagorical = ['sex', 'cp', 'exang', 'slope', 'thal']
-    signal_quantitative = ['age', 'thalach', 'oldpeak', 'ca']
-    signal_features = signal_catagorical + signal_quantitative
-
+    DROP_FIRST = False  # for assigning dummy variables using pandas method
     data = preproc_cleveland.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"), DROP_FIRST)
-    features_to_use = [col for col in data.columns for feature in signal_features if
-     col == feature or col.startswith(feature + preproc_cleveland.DUMMY_SEPARATOR)]
-    # data = data[[LABEL] + features_to_use]
+    # signal_catagorical = ['sex', 'cp', 'exang', 'slope', 'thal']  # features found to have significant differences
+    # signal_quantitative = ['age', 'thalach', 'oldpeak', 'ca']
+    # signal_features = signal_catagorical + signal_quantitative
+    # features_to_use = [col for col in data.columns for feature in signal_features if
+    #  col == feature or col.startswith(feature + preproc_cleveland.DUMMY_SEPARATOR)]
+    # # data = data[[LABEL] + features_to_use]
+
     labels = data[LABEL]
     measurements = data.drop(LABEL, axis=1)
     X_train, X_test, y_train, y_test = train_test_split(measurements, labels, test_size=0.33)
@@ -119,56 +120,23 @@ def heart_disease():
     print(f"m={m}, n_features={n_features}", "", sep="\n")
     results = pd.DataFrame(columns=['model', 'dataset', 'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp',
                                     'fn', 'tp'])
-
-    # sk_logreg_train_perform, sk_logreg_test_perform = sk_logreg(X, y, X_test, y_test)
-    # results = results.append(sk_logreg_train_perform, ignore_index=True)
-    # results = results.append(sk_logreg_test_perform, ignore_index=True)
-    #
-    # sk_logreg_rfecv_train_perform, sk_logreg_rfecv_test_perform = sk_logreg_rfecv(X, y, X_test, y_test)
-    # results = results.append(sk_logreg_rfecv_train_perform, ignore_index=True)
-    # results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
-
     n_iter = int(1 * 1e4)
     alpha = 0.15
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
 
-    # logreg_train_perform, logreg_test_perform = logreg(X, y, X_test, y_test, n_features, alpha, n_iter, print_freq)
-    # results = results.append(logreg_train_perform, ignore_index=True)
-    # results = results.append(logreg_test_perform, ignore_index=True)
-
-    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[], alpha=alpha, n_iter=n_iter,
-                                           reg_param=0, print_freq=print_freq)
-    results = results.append(train_result, ignore_index=True)
-    results = results.append(test_result, ignore_index=True)
-
-    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2], alpha=alpha, n_iter=n_iter,
-                                           reg_param=0, print_freq=print_freq)
-    results = results.append(train_result, ignore_index=True)
-    results = results.append(test_result, ignore_index=True)
-
-    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2], alpha=alpha, n_iter=n_iter,
-                                           reg_param=1, print_freq=print_freq)
-    results = results.append(train_result, ignore_index=True)
-    results = results.append(test_result, ignore_index=True)
-
-    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2], alpha=alpha, n_iter=n_iter,
-                                           reg_param=2.5, print_freq=print_freq)
-    results = results.append(train_result, ignore_index=True)
-    results = results.append(test_result, ignore_index=True)
-
-    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2], alpha=alpha, n_iter=n_iter,
-                                           reg_param=0, print_freq=print_freq)
-    results = results.append(train_result, ignore_index=True)
-    results = results.append(test_result, ignore_index=True)
-
-    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2], alpha=alpha, n_iter=n_iter,
-                                           reg_param=1, print_freq=print_freq)
-    results = results.append(train_result, ignore_index=True)
-    results = results.append(test_result, ignore_index=True)
+    for architecture in [ [2], [2, 2] ]:
+        for reg_param in [0, 1, 2, 3, 4]:
+            train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture, weight_scale=1,
+                                                   alpha=alpha,
+                                                   n_iter=n_iter, reg_param=reg_param, print_freq=print_freq)
+            results = results.append(train_result, ignore_index=True)
+            results = results.append(test_result, ignore_index=True)
 
     print()
-    print(results.sort_values(["dataset", "model"]).round(DEC))
+    print(results[results['dataset'] == 'test'].sort_values(['roc_auc'], ascending=False).round(DEC))
+    print()
+    print(results[results['dataset'] == 'train'].sort_values(['roc_auc'], ascending=False).round(DEC))
 
     # TODO class balancing? implement other gradient descent algorithms?
 

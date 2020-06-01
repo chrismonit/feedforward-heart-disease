@@ -79,7 +79,7 @@ def logreg(X, y, X_test, y_test, n_features, alpha, n_iterations, print_frequenc
     return train_performance, test_performance
 
 
-def model_experiment(X, y, X_test, y_test, architecture, alpha, n_iter, reg_param, print_freq):
+def experiment(X, y, X_test, y_test, architecture=[], alpha=1, n_iter=1e2, reg_param=0, print_freq=0.1):
     """Instantiate, train and evaluate a neural network model"""
     name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
     print(f"Running model {name}")
@@ -137,68 +137,33 @@ def heart_disease():
     # results = results.append(logreg_train_perform, ignore_index=True)
     # results = results.append(logreg_test_perform, ignore_index=True)
 
-    architecture, reg_param = [], 0
-    name = "1:" + str(reg_param)
-    print(f"Running model {name}")
-    net_logreg = NetBin(X.shape[0], architecture, w_init_scale=0)  # tried scaling this to 0 to make the same as logreg
-    net_logreg_cost = net_logreg.fit(X, np.expand_dims(y, 0), alpha, n_iter, print_frequency=print_freq)
-    y_pred_train_net_logreg = pd.Series(net_logreg.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, y_pred_train_net_logreg, model=name, dataset="train"), ignore_index=True)
-    net_y_pred_test = pd.Series(net_logreg.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, net_y_pred_test, model=name, dataset="test"), ignore_index=True)
+    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[], alpha=alpha, n_iter=n_iter,
+                                           reg_param=0, print_freq=print_freq)
+    results = results.append(train_result, ignore_index=True)
+    results = results.append(test_result, ignore_index=True)
 
-    architecture, reg_param = [2], 0
-    name = "_".join([str(units) for units in architecture+[1]]) + ":" + str(reg_param)
-    print(f"Running model {name}")
-    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
-    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
-    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2], alpha=alpha, n_iter=n_iter,
+                                           reg_param=0, print_freq=print_freq)
+    results = results.append(train_result, ignore_index=True)
+    results = results.append(test_result, ignore_index=True)
 
-    architecture, reg_param = [2], 1
-    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
-    print(f"Running model {name}")
-    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
-    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
-    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2], alpha=alpha, n_iter=n_iter,
+                                           reg_param=1, print_freq=print_freq)
+    results = results.append(train_result, ignore_index=True)
+    results = results.append(test_result, ignore_index=True)
 
-    architecture, reg_param = [2], 2.5
-    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
-    print(f"Running model {name}")
-    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
-    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
-    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2], alpha=alpha, n_iter=n_iter,
+                                           reg_param=2.5, print_freq=print_freq)
+    results = results.append(train_result, ignore_index=True)
+    results = results.append(test_result, ignore_index=True)
 
-    architecture, reg_param = [2, 2], 0
-    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
-    print(f"Running model {name}")
-    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
-    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
-    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2], alpha=alpha, n_iter=n_iter,
+                                           reg_param=0, print_freq=print_freq)
+    results = results.append(train_result, ignore_index=True)
+    results = results.append(test_result, ignore_index=True)
 
-    architecture, reg_param = [2, 2], 1
-    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
-    print(f"Running model {name}")
-    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
-    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
-    results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
-    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
-
-    train_result, test_result = model_experiment(X, y, X_test, y_test, architecture, alpha, n_iter, reg_param,
-                                                 print_freq)
+    train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2], alpha=alpha, n_iter=n_iter,
+                                           reg_param=1, print_freq=print_freq)
     results = results.append(train_result, ignore_index=True)
     results = results.append(test_result, ignore_index=True)
 

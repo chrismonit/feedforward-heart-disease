@@ -79,6 +79,19 @@ def logreg(X, y, X_test, y_test, n_features, alpha, n_iterations, print_frequenc
     return train_performance, test_performance
 
 
+def model_experiment(X, y, X_test, y_test, architecture, alpha, n_iter, reg_param, print_freq):
+    """Instantiate, train and evaluate a neural network model"""
+    name = "_".join([str(units) for units in architecture + [1]]) + ":" + str(reg_param)
+    print(f"Running model {name}")
+    model = NetBin(X.shape[0], architecture, w_init_scale=0.01)
+    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
+    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
+    train_performance = performance(y, train_pred, model=name, dataset="train")
+    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
+    test_performance = performance(y_test, test_pred, model=name, dataset="test")
+    return train_performance, test_performance
+
+
 def heart_disease():
     np.random.seed(10)
     LABEL = 'disease'
@@ -115,7 +128,7 @@ def heart_disease():
     # results = results.append(sk_logreg_rfecv_train_perform, ignore_index=True)
     # results = results.append(sk_logreg_rfecv_test_perform, ignore_index=True)
 
-    n_iter = int(2 * 1e5)
+    n_iter = int(1 * 1e4)
     alpha = 0.15
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
@@ -183,6 +196,11 @@ def heart_disease():
     results = results.append(performance(y, train_pred, model=name, dataset="train"), ignore_index=True)
     test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
     results = results.append(performance(y_test, test_pred, model=name, dataset="test"), ignore_index=True)
+
+    train_result, test_result = model_experiment(X, y, X_test, y_test, architecture, alpha, n_iter, reg_param,
+                                                 print_freq)
+    results = results.append(train_result, ignore_index=True)
+    results = results.append(test_result, ignore_index=True)
 
     print()
     print(results.sort_values(["dataset", "model"]).round(DEC))

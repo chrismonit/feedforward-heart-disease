@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from statsmodels.stats.multitest import multipletests
 import os
+import preproc_cleveland
 
 pd.options.display.width = 0  # adjust according to terminal width
 DEC = 3  # decimal places for rounding
@@ -36,34 +37,6 @@ FULL_NAMES = {
 }
 GROUND_TRUTH_LABEL = 'disease'
 DESCRIPTION = "Identifying features with potential predictive value for heart disease"
-
-
-def get_data(file_path):
-    """Data pre-processing"""
-    assert set(CATEGORICAL + QUANTITATIVE) == set(NAMES) - set(["num"]), "Inconsistent categorical/quantiative names"
-    df = pd.read_csv(file_path, names=NAMES).drop_duplicates()
-    df = df.replace(to_replace={MISSING_MARKER: np.nan})  # Deal with missing data
-    df = df.astype('float64')
-
-    print(f"Missing data counts", df.isnull().sum(), "", sep="\n")
-
-    # Impute missing values with model value for each feature
-    df = df.fillna(df.mode().iloc[0])
-
-    # Group num values > 0 as disease or no disease
-    # print(f"num value counts", df['num'].value_counts().to_frame().to_csv(sep="\t"), "", sep="\n")
-    df[GROUND_TRUTH_LABEL] = df['num'].apply(lambda x: 0 if x == 0 else 1)
-    df = df.drop("num", axis=1)
-    df = df[[GROUND_TRUTH_LABEL] + [col for col in df.columns if col != GROUND_TRUTH_LABEL]]  # move to first column
-    return df
-
-
-# TODO deprecated
-def assign_dummies(df, names):
-    for name in names:
-        df = pd.concat([df.drop(name, axis=1),  # .astype('int64'),
-                        pd.get_dummies(df[name], prefix=name, prefix_sep="-", drop_first=True)], axis=1)
-    return df
 
 
 # TODO deprecated
@@ -186,14 +159,11 @@ def main():
         print(f"Error: cannot find data file {args.data}")
         exit()
 
-    df = get_data(args.data)
+    df = preproc_cleveland.get_data(args.data)
     ground_truth_label = 'disease'
 
-    print(f"Key for quantitative features:",
-          "; ".join([f"{feat}, {FULL_NAMES[feat]}" for feat in QUANTITATIVE]),
-          f"Key for categorical features:",
-          "; ".join([f"{feat}, {FULL_NAMES[feat]}" for feat in CATEGORICAL]),
-          "", sep="\n")
+    print(pd.Series(FULL_NAMES).to_frame())
+    print()
 
     # Comparing quantitative fields between disease and no disease
     mwu_results = mwu(df, ground_truth_label, QUANTITATIVE)

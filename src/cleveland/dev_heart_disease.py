@@ -5,9 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import RFECV
-import matplotlib.pyplot as plt
 
-import preproc_cleveland
+from cleveland import preproc
 from models import LogReg
 from models import NetBin
 
@@ -96,7 +95,7 @@ def heart_disease():
     np.random.seed(10)
     LABEL = 'disease'
     DROP_FIRST = False  # for assigning dummy variables using pandas method
-    data = preproc_cleveland.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"), DROP_FIRST)
+    data = preproc.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"), DROP_FIRST)
     # signal_catagorical = ['sex', 'cp', 'exang', 'slope', 'thal']  # features found to have significant differences
     # signal_quantitative = ['age', 'thalach', 'oldpeak', 'ca']
     # signal_features = signal_catagorical + signal_quantitative

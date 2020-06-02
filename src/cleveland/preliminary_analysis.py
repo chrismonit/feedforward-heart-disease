@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from statsmodels.stats.multitest import multipletests
 import os
-import preproc_cleveland
+from cleveland import preproc
 
 pd.options.display.width = 0  # adjust according to terminal width
 DEC = 3  # decimal places for rounding
@@ -159,7 +159,7 @@ def main():
         print(f"Error: cannot find data file {args.data}")
         exit()
 
-    df = preproc_cleveland.get_data(args.data)
+    df = preproc.get_data(args.data)
     ground_truth_label = 'disease'
 
     print(pd.Series(FULL_NAMES).to_frame())

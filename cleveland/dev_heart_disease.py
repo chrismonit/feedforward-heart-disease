@@ -7,12 +7,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import RFECV
 
 from cleveland import preproc
-from models import LogReg
-from models import NetBin
+from ml.models import LogReg
+from ml.models import NetBin
 
 pd.options.display.width = 0  # adjust according to terminal width
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))  # assuming this file in <proj_root>/src/<package>
+ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src/<package>
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 DEC = 3
 
@@ -118,15 +118,15 @@ def heart_disease():
     print(f"m={m}, n_features={n_features}", "", sep="\n")
     results = pd.DataFrame(columns=['arch.', 'init', 'alpha', 'n_iter', 'reg', 'dataset',
                                     'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp',  'fn', 'tp'])
-    n_iter = int(1 * 1e4)
+    n_iter = int(1 * 1e1)
     alpha = 0.15
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
 
     for architecture in [[2, 2]]:  # TODO could make these more systemtic, for plots
-        for reg_param in [0, 1, 2, 3]:
+        for reg_param in [0]:
             for w_init in [10]:
-                for alpha in [0.1, 0.2, 0.3]:
+                for alpha in [0.1]:
                     train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture,
                                                            weight_scale=w_init, alpha=alpha,
                                                            n_iter=n_iter, reg_param=reg_param, print_freq=print_freq)
@@ -134,9 +134,11 @@ def heart_disease():
                     results = results.append(test_result, ignore_index=True)
 
     print()
-    print(results[results['dataset'] == 'test'].sort_values(['roc_auc'], ascending=False).round(DEC))
+    print(results[results['dataset'] == 'test'].sort_values(['roc_auc'], ascending=False).round(DEC).to_markdown(
+        showindex=False))
     print()
-    print(results[results['dataset'] == 'train'].sort_values(['roc_auc'], ascending=False).round(DEC))
+    print(results[results['dataset'] == 'train'].sort_values(['roc_auc'], ascending=False).round(DEC).to_markdown(
+        showindex=False))
 
     # TODO class balancing? implement other gradient descent algorithms?
 

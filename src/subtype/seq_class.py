@@ -4,10 +4,10 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 
-import src.preproc as preproc
-from src.models import LogReg
+from subtype import preproc
+from models import LogReg
 
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))  # assuming this file in <proj_root>/src
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 DEC = 3
 

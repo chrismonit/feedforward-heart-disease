@@ -7,7 +7,7 @@ import os
 from cleveland import preproc
 
 pd.options.display.width = 0  # adjust according to terminal width
-DEC = 3  # decimal places for rounding
+DEC = 5  # decimal places for rounding
 
 # ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src
 # DATA_DIR = os.path.join(ROOT_DIR, "")
@@ -178,7 +178,7 @@ def main():
     # Correct for multiple hypothesis testing
     combined = pd.concat([mwu_results, chi2_results], axis=0)
     combined_corrected = multiple_test_correction(combined, 'bonferroni')
-    print(f"Combined corrected test results:", combined_corrected, "", sep="\n")
+    print(f"Combined corrected test results:", combined_corrected.round(DEC).to_markdown(), "", sep="\n")
 
     # df_dummies = assign_dummies(df, CATEGORICALS)
     # plot_corrmat(df_dummies.drop('disease', axis=1), 'kendall')

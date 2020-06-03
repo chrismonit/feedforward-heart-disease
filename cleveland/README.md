@@ -16,10 +16,10 @@ Firstly, we investigate whether there is discriminatory signal in these variable
 
 Visualising the features by presence/absence of CHD reveals clearly distinct distributions for some but not all measurements:
 <p align="center">
-<img src="../docs/cleveland/categoricals_plot.png" alt="Continuous variable distributions" width="300"/>
+<img src="../docs/cleveland/categoricals_plot.png" alt="Continuous variable distributions" width="600"/>
 </p>
 <p align="center">
-<img src="../docs/cleveland/quantitatives_plot.png" alt="Continuous variable distributions" width="300"/>
+<img src="../docs/cleveland/quantitatives_plot.png" alt="Continuous variable distributions" width="600"/>
 </p>
 
 But are these differences statistically significant? We applied the two-sided Mann-Whitney U test for the six quantitative features, as this is a nonparametric test that requires no assumption about the underlying distributions, while for the seven categorical variables we apply Pearson's chi squared test. We reject the null hypothesis of identical distributions if p < 0.05. With 13 features to investigate, performing multiple hypothesis tests increases the danger of type 1 error and therefore adjust the resulting *p* values using the Bonferroni correction (arguably the most conservative of correction procedures) and retain the 0.05 threshold (values to 5 decimal places):
@@ -45,7 +45,7 @@ We concluded there is significant discriminatory signal among some features whic
 Computing Kendall's rank correlation coefficient between features (with categorical features transformed to quantative using one hot encoding), showed there is not an overwhelmingly strong correlation between any of the features:
 
 <p align="center">
-<img src="../docs/cleveland/corr_mat_kendall.png" alt="Correlation matrix" width="300"/>
+<img src="../docs/cleveland/corr_mat_kendall.png" alt="Correlation matrix" width="600"/>
 </p>
 
 

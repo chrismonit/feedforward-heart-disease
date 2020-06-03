@@ -162,24 +162,26 @@ def main():
     df = preproc.get_data(args.data)
     ground_truth_label = 'disease'
 
-    features = pd.Series(FULL_NAMES, name='Description')
-    features.index = features.index.rename('Feature')
-    print(features.to_frame().to_markdown())
-    print()
-
     # Comparing quantitative fields between disease and no disease
     mwu_results = mwu(df, ground_truth_label, QUANTITATIVE)
-    print(f"Mann Whiteny U results, quantitative fields:", mwu_results, "", sep="\n")
+    # print(f"Mann Whiteny U results, quantitative fields:", mwu_results, "", sep="\n")
 
     # Analysing categorical variables with chi2
     chi2_results = chi2(df, ground_truth_label, CATEGORICAL)
-    print(f"chi2 results, categorical fields:", chi2_results, "", sep="\n")
+    # print(f"chi2 results, categorical fields:", chi2_results, "", sep="\n")
 
     # Correct for multiple hypothesis testing
     combined = pd.concat([mwu_results, chi2_results], axis=0)
     combined_corrected = multiple_test_correction(combined, 'bonferroni')
-    print(f"Combined corrected test results:", combined_corrected.round(DEC).to_markdown(), "", sep="\n")
 
+    descriptions = pd.Series(FULL_NAMES, name='description')
+    descriptions.index = descriptions.index.rename('feature')
+    merged = pd.merge(descriptions, combined_corrected, left_index=True, right_index=True)
+    merged = merged.rename(columns={'p_bonferroni': 'p_bon'})
+    merged['p_bon < 0.05'] = (merged['p_bon'] < 0.05).replace({True: 'Yes', False: 'No'})
+    print(merged.sort_values('test').round(DEC).to_markdown())
+
+    # TODO needs updating
     # df_dummies = assign_dummies(df, CATEGORICALS)
     # plot_corrmat(df_dummies.drop('disease', axis=1), 'kendall')
 

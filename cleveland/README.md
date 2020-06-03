@@ -11,23 +11,8 @@ Here we investigate the predictive potential of shallow neural networks in ident
 
 ## Results
 ### Investigating features
-Firstly, we investigate whether there is discriminatory signal in these variables. The following table summarises the  six features quantitative/ordinal and seven categorical features and their definitions:
+Firstly, we investigate whether there is discriminatory signal in these variables. 
 
-| Feature   | Description                           |
-|:----------|:--------------------------------------|
-| age       | Age in years                          |
-| sex       | Sex                                   |
-| cp        | Chest pain type                       |
-| trestbps  | Resting blood pressure                |
-| chol      | Serum cholestoral                     |
-| fbs       | Fasting blood sugar                   |
-| restecg   | Resting electrocardiography           |
-| thalach   | Max. heart rate                       |
-| exang     | Exercise induced angina               |
-| oldpeak   | Exercise-induced ST depression        |
-| slope     | Slope of the peak exercise ST segment |
-| ca        | Number of major vessels               |
-| thal      | Thallium scan result                  |
 
 Visualising the features by presence/absence of CHD reveals clearly distinct distributions for some but not all measurements:
 <p align="center">
@@ -37,27 +22,27 @@ Visualising the features by presence/absence of CHD reveals clearly distinct dis
 <img src="../docs/cleveland/quantitatives_plot.png" alt="Continuous variable distributions" width="300"/>
 </p>
 
-But are these differences statistically significant? We applied the two-sided Mann-Whitney U test for quantitative features, as this is a nonparametric test that requires no assumption about the underlying distributions, while for categorical variables we apply Pearson's chi squared test. We reject the null hypothesis of identical distributions if p < 0.05. With 13 features to investigate, performing multiple hypothesis tests increases the danger of type 1 error and therefore adjust the resulting *p* values using the Bonferroni correction (arguably the most conservative of correction procedures) and retain the 0.05 threshold:
+But are these differences statistically significant? We applied the two-sided Mann-Whitney U test for the six quantitative features, as this is a nonparametric test that requires no assumption about the underlying distributions, while for the seven categorical variables we apply Pearson's chi squared test. We reject the null hypothesis of identical distributions if p < 0.05. With 13 features to investigate, performing multiple hypothesis tests increases the danger of type 1 error and therefore adjust the resulting *p* values using the Bonferroni correction (arguably the most conservative of correction procedures) and retain the 0.05 threshold (values to 5 decimal places):
 
-|     Feature     |     Test    |     Statistic    |     p            |     p_Bon        |     p_Bon < 0.05   |
-|-----------------|-------------|------------------|------------------|------------------|--------------------|
-|     age         |     MW-U    |     8274.50      |     4 x 10-5     |     5 x 10-4     |     Yes            |
-|     trestbps    |     MW-U    |     9710.00      |     0.03         |     0.34         |     No             |
-|     chol        |     MW-U    |     9798.50      |     0.04         |     0.46         |     No             |
-|     thalach     |     MW-U    |     16989.50     |     2 x 10-13    |     2 x 10-12    |     Yes            |
-|     oldpeak     |     MW-U    |     6037.00      |     7 x 10-13    |     9 x 10-12    |     Yes            |
-|     ca          |     MW-U    |     5711.50      |     2 x 10-17    |     3 x 10-16    |     Yes            |
-|     sex         |     chi2    |     22.04        |     3 x 10-6     |     3 x 10-5     |     Yes            |
-|     cp          |     chi2    |     81.81        |     10-17        |     2 x 10-16    |     Yes            |
-|     fbs         |     chi2    |     0.08         |     0.78         |     1            |     No             |
-|     restecg     |     chi2    |     10.05        |     0.01         |     0.09         |     No             |
-|     exang       |     chi2    |     54.69        |     10-13        |     2 x 10-12    |     Yes            |
-|     slope       |     chi2    |     45.78        |     10-10        |     10-9         |     Yes            |
-|     thal        |     chi2    |     82.68        |     10-18        |     10-17        |     Yes            |
+| feature   | description                           | test   |   statistic |       p |   p_bon | p_bon < 0.05   |
+|:----------|:--------------------------------------|:-------|------------:|--------:|--------:|:---------------|
+| age       | Age in years                          | MW-U   |   8274.5    | 4e-05   | 0.00051 | Yes            |
+| trestbps  | Resting blood pressure                | MW-U   |   9710      | 0.02597 | 0.33764 | No             |
+| chol      | Serum cholestoral                     | MW-U   |   9798.5    | 0.03536 | 0.45967 | No             |
+| thalach   | Max. heart rate                       | MW-U   |  16989.5    | 0       | 0       | Yes            |
+| oldpeak   | Exercise-induced ST depression        | MW-U   |   6037      | 0       | 0       | Yes            |
+| ca        | Number of major vessels               | MW-U   |   5711.5    | 0       | 0       | Yes            |
+| sex       | Sex                                   | chi2   |     22.0426 | 0       | 3e-05   | Yes            |
+| cp        | Chest pain type                       | chi2   |     81.8158 | 0       | 0       | Yes            |
+| fbs       | Fasting blood sugar                   | chi2   |      0.0771 | 0.78127 | 1       | No             |
+| restecg   | Resting electrocardiography           | chi2   |     10.0515 | 0.00657 | 0.08536 | No             |
+| exang     | Exercise induced angina               | chi2   |     54.6864 | 0       | 0       | Yes            |
+| slope     | Slope of the peak exercise ST segment | chi2   |     45.7846 | 0       | 0       | Yes            |
+| thal      | Thallium scan result                  | chi2   |     82.6846 | 0       | 0       | Yes            |
 
-We concluded there is significant discriminatory signal among some features. 
+We concluded there is significant discriminatory signal among some features which may be useful for CHD classification. 
 
-Correlation matrix?
+*Correlation matrix?*
 
 ### Classification models
 NB using all features

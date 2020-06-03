@@ -17,11 +17,11 @@ correlation matrix?
 The data comprise six quantitative (or ordinal) and seven categorical features. We apply the two-sided Mann-Whitney U test for quantitative features, as this is a nonparametric test that requires no assumption about the underlying distributions. For categorical variables we apply Pearson's chi squared test. We reject the null hypothesis of identical distributions if p < 0.05. With 13 features to investigate, performing multiple hypothesis tests increases the danger of type 1 error. We therefore adjust the resulting p values using the Bonferroni correction (arguably the most conservative of correction procedures) and retain the 0.05 threshold.
 
 <p align="center">
-<img src="/docs/categoricals_plot.png" alt="Continuous variable distributions" width="300"/>
+<img src="../docs/categoricals_plot.png" alt="Continuous variable distributions" width="300"/>
 </p>
 
 <p align="center">
-<img src="/docs/quantitatives_plot.png" alt="Continuous variable distributions" width="300"/>
+<img src="../docs/quantitatives_plot.png" alt="Continuous variable distributions" width="300"/>
 </p>
 
 ### Classification models

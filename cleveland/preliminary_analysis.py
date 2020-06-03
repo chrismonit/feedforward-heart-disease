@@ -39,7 +39,6 @@ GROUND_TRUTH_LABEL = 'disease'
 DESCRIPTION = "Identifying features with potential predictive value for heart disease"
 
 
-# TODO deprecated
 def plot_corrmat(df, method='kendall'):
     """ Produce correlation matrix plot """
     corr_mat_plot = df.corr(method=method)
@@ -52,8 +51,9 @@ def plot_corrmat(df, method='kendall'):
     # plt.title(f"Correlation: {method}\n\n")
     plt.xticks(range(df.shape[1]), df.columns, rotation=90)
     plt.yticks(range(df.shape[1]), df.columns)
-    # plt.savefig(os.path.join(OUT_DIR, f"corr_mat_{METHOD}.png"), dpi=100)
-    plt.show()
+    output_path = os.path.join(OUT_DIR, f"corr_mat_{method}.png")
+    plt.savefig(output_path, dpi=100)
+    print(f"Kendall correlation coefficient plots saved to:", f"{output_path}", "", sep="\n")
 
 
 # TODO deprecated
@@ -81,7 +81,7 @@ def quant_hist_compare(df, label, n_bins=20):
     plt.subplots_adjust(hspace=0.4, wspace=0.3)
     output_path = os.path.join(OUT_DIR, "quantitatives_plot.png")
     plt.savefig(output_path)
-    print(f"Quantitative feature distribution plots saved to {output_path}", f"", "", sep="\n")
+    print(f"Quantitative feature distribution plots saved to:", f"{output_path}", "", sep="\n")
     # plt.show()  # TODO show legend?
 
 
@@ -112,7 +112,7 @@ def cat_bar_compare(df, label):
     plt.subplots_adjust(hspace=0.4, wspace=0.3)
     output_path = os.path.join(OUT_DIR, "categoricals_plot.png")
     plt.savefig(output_path)
-    print(f"Categorical feature distribution plots saved to {output_path}", f"", "", sep="\n")
+    print(f"Categorical feature distribution plots saved to:", f"{output_path}", "", sep="\n")
     # plt.show()
 
 
@@ -179,12 +179,10 @@ def main():
     merged = pd.merge(descriptions, combined_corrected, left_index=True, right_index=True)
     merged = merged.rename(columns={'p_bonferroni': 'p_bon'})
     merged['p_bon < 0.05'] = (merged['p_bon'] < 0.05).replace({True: 'Yes', False: 'No'})
-    print(merged.sort_values('test').round(DEC).to_markdown())
+    print("Statistical comparisons between CHD and non-CHD:", merged.sort_values('test').round(DEC).to_markdown(),
+          "", sep="\n")
 
-    # TODO needs updating
-    # df_dummies = assign_dummies(df, CATEGORICALS)
-    # plot_corrmat(df_dummies.drop('disease', axis=1), 'kendall')
-
+    plot_corrmat(preproc.assign_dummies(df, preproc.CATEGORICAL, drop_first=False), 'kendall')
     quant_hist_compare(df, ground_truth_label)
     cat_bar_compare(df, ground_truth_label)
 

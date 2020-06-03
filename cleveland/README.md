@@ -40,9 +40,14 @@ But are these differences statistically significant? We applied the two-sided Ma
 | slope     | Slope of the peak exercise ST segment | chi2   |     45.7846 | 0       | 0       | Yes            |
 | thal      | Thallium scan result                  | chi2   |     82.6846 | 0       | 0       | Yes            |
 
-We concluded there is significant discriminatory signal among some features which may be useful for CHD classification. 
+We concluded there is significant discriminatory signal among some features which may be useful for CHD classification.
 
-*Correlation matrix?*
+Computing Kendall's rank correlation coefficient between features (with categorical features transformed to quantative using one hot encoding), showed there is not an overwhelmingly strong correlation between any of the features:
+
+<p align="center">
+<img src="../docs/cleveland/corr_mat_kendall.png" alt="Correlation matrix" width="300"/>
+</p>
+
 
 ### Classification models
 NB using all features

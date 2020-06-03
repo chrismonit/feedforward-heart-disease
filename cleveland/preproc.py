@@ -28,7 +28,7 @@ GROUND_TRUTH_LABEL = 'disease'
 DESCRIPTION = "Identifying features with potential predictive value for heart disease"
 
 
-def from_file(path, drop_first):
+def from_file_with_dummies(path, drop_first):
     df = get_data(path)
     df = assign_dummies(df, CATEGORICAL, drop_first)
     return df

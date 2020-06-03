@@ -95,7 +95,7 @@ def heart_disease():
     np.random.seed(10)
     LABEL = 'disease'
     DROP_FIRST = False  # for assigning dummy variables using pandas method
-    data = preproc.from_file(os.path.join(DATA_DIR, "processed.cleveland.data.csv"), DROP_FIRST)
+    data = preproc.from_file_with_dummies(os.path.join(DATA_DIR, "processed.cleveland.data.csv"), DROP_FIRST)
     # signal_catagorical = ['sex', 'cp', 'exang', 'slope', 'thal']  # features found to have significant differences
     # signal_quantitative = ['age', 'thalach', 'oldpeak', 'ca']
     # signal_features = signal_catagorical + signal_quantitative

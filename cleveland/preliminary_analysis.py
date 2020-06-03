@@ -162,7 +162,9 @@ def main():
     df = preproc.get_data(args.data)
     ground_truth_label = 'disease'
 
-    print(pd.Series(FULL_NAMES).to_frame())
+    features = pd.Series(FULL_NAMES, name='Description')
+    features.index = features.index.rename('Feature')
+    print(features.to_frame().to_markdown())
     print()
 
     # Comparing quantitative fields between disease and no disease

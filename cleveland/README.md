@@ -48,18 +48,35 @@ Computing Kendall's rank correlation coefficient between features (with categori
 <img src="../docs/cleveland/corr_mat_kendall.png" alt="Correlation matrix" width="600"/>
 </p>
 
-
 ### Classification models
+aimed to make a classifier, binary classification task
 NB using all features
+Simple architectures with units in hidden layers using hyperbolic tangent activation functions and the final output layer comprising a single sigmoid function unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to two hidden layers, each comprising two units. Weight and bias parameters were determined by 10^4 iterations of standard gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to the training set, with regularisation parameter (lambda) values ranging from 0 to 10. The data were split 3:1 into training and test sets, by randomly sampled and preserving the proportions of CHD and non-CHD cases. Candidate models were assessed by the ROC area under the curve (AUC) on the test set.
+
+Summarise the distribution of performances? Violin plot or something?
+
+The following table summarises the performance of the top AUC model:
+
+| layers | weight scaling | alpha | iterations   | lambda | AUC    | sens. | spec. | acc.  | TN | FP | FN | TP |
+|--------|----------------|-------|--------------|--------|--------|-------|-------|-------|----|----|----|----|
+| 2_2_1  | 1.100          | 0.2   | 10000        | 2      | 0.908  | 0.921 | 0.895 | 0.908 | 34 | 4  | 3  | 35 |
+
+ROC 
 
 ## Conclusions
+limitations? I haven't worked out how much performance is beneficial, so not clear if this is good enough.
+could note that it would be preferable to have a separate purely test set
+could have done more feature engineering?
+these are impressive, better than kaggle competition winners?
 
 ## Methods
 
-### Models
-Details of implementation, optimisation, the hypter parameters that were tweaked etc
+### Implementation and model experiments
+All source code can be found in this repository. Models and optimisation algorithms have been implemented from scratch in pure Python, using standard numerical libraries (e.g. numpy).
 
-### Preprocessing
+Initial weight parameters were sampled from a standard normal distribution and then multiplied by one of several scalars, ranging from 10^-3 to 1.1; bias parameters were all initialised as 0.
+
+### Data Preprocessing
 
 #### Missing data
 Features 'ca' and 'thal' (blood vessels and thallium scan) have four and two missing entries respectively, of 303 records in total. Since 'thal' is categorical and ‘ca’ is ordinal, we impute missing values using the modal value for each feature.

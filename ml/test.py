@@ -12,10 +12,10 @@ def numerical_grad():
     epsilon = 1e-7
     tolerance = 1e-6
     print(f"X={X}", f"y={y}", f"epsilon={epsilon}", "", sep="\n")
-    hidden_layers = [2, 2, 2]
+    hidden_layers = [2, 2]
     layers = [num_features] + hidden_layers + [1]
     w_init_scale = 0.01
-    reg_param = 0
+    reg_param = 2
 
     # Testing bias derivatives:
     bias_abs_diffs = []
@@ -69,7 +69,7 @@ def numerical_grad():
                 abs_diff = np.abs(approx_grad - weight_derivs[layer][unit, weight])
                 weight_abs_diffs.append(abs_diff)
     max_weight_abs_diff = np.max(weight_abs_diffs)
-    assert max_weight_abs_diff < tolerance
+    assert max_weight_abs_diff < tolerance, f"Max abs weight diff={max_weight_abs_diff}"
     print(f"Passed weight gradient test when reg_param={reg_param}. Max abs difference={max_weight_abs_diff}")
 
 

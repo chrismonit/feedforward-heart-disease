@@ -102,9 +102,9 @@ class NetBin:
         return 1 - np.power(np.tanh(Z), 2)
 
     def _regularisation(self, reg_param, n_cases):  # TODO should be a wrapper for other functions
-        """Regularisation by weight decay, ie Frobenius norm of weights. Does nothing with biases"""
-        # TODO this is memory inefficient, no need to have list of norm values
-        sum_frob = np.sum([np.linalg.norm(self.weights[l], ord='fro') for l in range(1, len(self.layers))])
+        """Regularisation by weight decay, ie square Frobenius norm of weights. Does nothing with biases"""
+        # TODO can make this much more efficient
+        sum_frob = np.sum([np.power(np.linalg.norm(self.weights[l], ord='fro'), 2) for l in range(1, len(self.layers))])
         return (reg_param / (2 * n_cases)) * sum_frob
 
     def _forward(self, X, y, reg_param):

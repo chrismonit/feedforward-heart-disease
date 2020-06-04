@@ -83,8 +83,6 @@ def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1
     architecture_str = "_".join([str(units) for units in architecture + [1]])
     model_info = {'arch.': architecture_str, 'init': weight_scale, 'alpha': alpha, 'n_iter': n_iter, 'reg': reg_param}
     model = NetBin(X.shape[0], architecture, w_init_scale=weight_scale)
-    for w_matrix in model.weights:
-        print(w_matrix)
     cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
     train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
     train_performance = performance(y, train_pred, dataset="train")
@@ -120,46 +118,49 @@ def heart_disease():
     print(f"m={m}, n_features={n_features}", "", sep="\n")
     results = pd.DataFrame(columns=['arch.', 'init', 'alpha', 'n_iter', 'reg', 'dataset',
                                     'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp', 'fn', 'tp'])
-    n_iter = int(1 * 1e1)
+    n_iter = int(1 * 1e4)
     alpha = 0.15
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
 
+    # print("init scale=1.1")
+    # N = 1
+    # for _ in range(N):
+    #     cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
+    #                                                  weight_scale=1.1, alpha=0.2,
+    #                                                  n_iter=int(1e4), reg_param=0, print_freq=0.00000001)
+    #     print(f"final_cost={cost}")
+    #     print("test", test_result['roc_auc'])
+    #     print("train", train_result['roc_auc'])
+    #     print()
+    #
+    # print()
+    # print()
+    # print("init scale=0.01")
+    # for _ in range(N):
+    #     cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
+    #                                                  weight_scale=0.01, alpha=0.2,
+    #                                                  n_iter=int(1e4), reg_param=0, print_freq=0.00000001)
+    #     print(f"final_cost={cost}")
+    #     print("test", test_result['roc_auc'])
+    #     print("train", train_result['roc_auc'])
 
-    print("init scale=1.1")
-    N = 1
-    for _ in range(N):
-        cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
-                                                     weight_scale=1.1, alpha=0.2,
-                                                     n_iter=int(1e4), reg_param=0, print_freq=0.00000001)
-        print(f"final_cost={cost}")
-        print("test", test_result['roc_auc'])
-        print("train", train_result['roc_auc'])
-        print()
-
-    print()
-    print()
-    print("init scale=0.01")
-    for _ in range(N):
-        cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
-                                                     weight_scale=0.01, alpha=0.2,
-                                                     n_iter=int(1e4), reg_param=0, print_freq=0.00000001)
-        print(f"final_cost={cost}")
-        print("test", test_result['roc_auc'])
-        print("train", train_result['roc_auc'])
-
-    exit()
-
-    for architecture in [[2, 2]]:  # TODO could make these more systematic, for plots
-        for reg_param in [0]:
-            for w_init in [10]:
+    for architecture in [[2, 2]]:  # TODO could make these more systemtic, for plots
+        for reg_param in [2]:
+            for w_init in [0.001, 0.01, 0.1, 1, 10]:
                 for alpha in [0.1]:
-                    final_cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture,
-                                                                       weight_scale=w_init, alpha=alpha,
-                                                                       n_iter=n_iter, reg_param=reg_param,
-                                                                       print_freq=print_freq)
-                    results = results.append(train_result, ignore_index=True)
-                    results = results.append(test_result, ignore_index=True)
+                    for i in range(1):
+                        cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture,
+                                                               weight_scale=w_init, alpha=alpha,
+                                                               n_iter=n_iter, reg_param=reg_param,
+                                                               print_freq=print_freq)
+                        results = results.append(train_result, ignore_index=True)
+                        results = results.append(test_result, ignore_index=True)
+                print("")
+                print(f"w_init={w_init}; cost={cost}")
+
+    print(results.sort_values(['dataset', 'init']))
+
 
     print()
     print(results[results['dataset'] == 'test'].sort_values(['roc_auc'], ascending=False).round(DEC).to_markdown(

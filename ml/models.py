@@ -69,6 +69,13 @@ class NetBin:
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))
 
+    # def init_parameters(self, w_init_scale):  # TODO not sure this is necessary after all
+    #     init_weights, init_biases = [], []
+    #     for l in range(1, len(self.layers)):
+    #         init_weights.append(np.random.randn(self.layers[l], self.layers[l - 1]) * w_init_scale)
+    #         init_biases.append(np.zeros((self.layers[l], 1)))
+    #     return init_weights, init_biases
+
     @staticmethod
     def _cost(y_pred, y_true):
         cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)  # TODO possible bug, need y.shape[1] instead
@@ -165,25 +172,60 @@ def numerical_grad():
     layer = 1
     unit = 0
     weight = 0
-    model = NetBin(num_features, [2], w_init_scale=1)
 
-    for layer_weights in model.weights:
+    np.random.seed(10)
+    model_orig = NetBin(num_features, [2], w_init_scale=1)
+    print("model_orig initial weights")
+    for layer_weights in model_orig.weights:
         print(layer_weights)
     print()
+    orig_cost = model_orig._forward(X, y, reg_param=reg_param)
+    print(f"model_orig cost={orig_cost}")
+    print("----------------------")
 
-    model.weights[layer][unit, weight] *= 10
-
-    for layer_weights in model.weights:
+    np.random.seed(10)
+    model_minus = NetBin(num_features, [2], w_init_scale=1)
+    print("model_minus initial weights")
+    for layer_weights in model_minus.weights:
         print(layer_weights)
     print()
+    model_minus.weights[layer][unit, weight] -= epsilon
+    print("model_minus initial weights, after modification")
+    for layer_weights in model_minus.weights:
+        print(layer_weights)
+    print()
+    minus_cost = model_minus._forward(X, y, reg_param=reg_param)
+    print(f"model_minus cost={minus_cost}")
+    print("----------------------")
 
-    # print()
-    # cost = model._forward(X, y, reg_param=reg_param)
-    # print(cost)
+    np.random.seed(10)
+    model_plus = NetBin(num_features, [2], w_init_scale=1)
+    print("model_plus initial weights")
+    for layer_weights in model_plus.weights:
+        print(layer_weights)
+    print()
+    model_plus.weights[layer][unit, weight] += epsilon
+    print("model_plus initial weights, after modification")
+    for layer_weights in model_plus.weights:
+        print(layer_weights)
+    print()
+    plus_cost = model_plus._forward(X, y, reg_param=reg_param)
+    print(f"model_plus cost={plus_cost}")
+    print("----------------------")
+    approx_grad = (plus_cost - minus_cost) / (2 * epsilon)
+    print(f"approx_grad={approx_grad}")
+    print("----------------------")
 
-    weight_derivs, bias_derivs = model._backward(y, reg_param)
+    print("model2")
+    np.random.seed(10)
+    model2 = NetBin(num_features, [2], w_init_scale=1)
+    cost = model2._forward(X, y, reg_param=reg_param)
+    weight_derivs, bias_derivs = model2._backward(y, reg_param)
     for layer_weight_derivs in weight_derivs:
         print(layer_weight_derivs)
+    print("----------------------")
+    abs_diff = np.abs(approx_grad - weight_derivs[layer][unit, weight])
+    print(f"abs_diff={abs_diff}")
     print()
 
 

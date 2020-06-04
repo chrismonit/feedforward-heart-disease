@@ -126,7 +126,7 @@ class NetBin:
             dZ = np.multiply(next_dA, g_prime_Z)
             reg_term = (reg_param / y.shape[1]) * self.weights[l]
             dW = 1/y.shape[1] * np.dot(dZ, self.activations[l-1].T) + reg_term
-            db = 1/y.shape[1] * np.sum(dZ, axis=1, keepdims=True)  # TODO this has changed, need to test backprop
+            db = 1/y.shape[1] * np.sum(dZ, axis=1, keepdims=True)
             weight_derivs.append(dW)
             bias_derivs.append(db)
             next_dA = np.dot(self.weights[l].T, dZ)

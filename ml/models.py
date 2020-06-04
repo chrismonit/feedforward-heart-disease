@@ -152,12 +152,47 @@ class NetBin:
         return y_pred
 
 
-if __name__ == '__main__':
+def numerical_grad():
+    np.random.seed(10)
+    num_features, m = 2, 1
+    X = np.random.randn(num_features, m)
+    y = np.expand_dims(np.array([1]*m), 0)
+    print(f"X={X}", f"y={y}", "", sep="\n")
+    epsilon = 1e-7
+    print(f"epsilon={epsilon}")
+
+    reg_param = 0
+    layer = 1
+    unit = 0
+    weight = 0
+    model = NetBin(num_features, [2], w_init_scale=1)
+
+    for layer_weights in model.weights:
+        print(layer_weights)
+    print()
+
+    model.weights[layer][unit, weight] *= 10
+
+    for layer_weights in model.weights:
+        print(layer_weights)
+    print()
+
+    # print()
+    # cost = model._forward(X, y, reg_param=reg_param)
+    # print(cost)
+
+    weight_derivs, bias_derivs = model._backward(y, reg_param)
+    for layer_weight_derivs in weight_derivs:
+        print(layer_weight_derivs)
+    print()
+
+
+def calculations():
     np.random.seed(10)
     num_features, m = 2, 5
     model = NetBin(num_features, [2, 2], w_init_scale=1)
     X = np.random.randn(num_features, m)
-    y = np.expand_dims(np.array([1]*m), 0)
+    y = np.expand_dims(np.array([1] * m), 0)
     print(f"X={X}", f"y={y}", "", sep="\n")
 
     print(f"model weights")
@@ -192,3 +227,6 @@ if __name__ == '__main__':
 
     # print(f"Final cost:", mynet.fit(X, y, 0.1, 500, print_frequency=0.1), "", sep="\n")
     # print(f"Predictions on training data", mynet.predict(X), "", sep="\n")
+
+if __name__ == '__main__':
+    numerical_grad()

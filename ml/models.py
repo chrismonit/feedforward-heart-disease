@@ -63,12 +63,8 @@ class NetBin:
         self.layers = [num_features] + hidden_layers + [1]
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
-        # self.activation_functions = [None] + [NetBin._tanh] * len(hidden_layers) + [NetBin._sigmoid]
-        # self.activation_function_derivatives = [None] + [NetBin._tanh_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
-
-        self.activation_functions = [None] + [NetBin._relu] * len(hidden_layers) + [NetBin._sigmoid]
-        self.activation_function_derivatives = [None] + [NetBin._relu_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
-
+        self.activation_functions = [None] + [NetBin._tanh] * len(hidden_layers) + [NetBin._sigmoid]
+        self.activation_function_derivatives = [None] + [NetBin._tanh_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
         for l in range(1, len(self.layers)):
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))

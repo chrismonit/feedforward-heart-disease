@@ -63,8 +63,12 @@ class NetBin:
         self.layers = [num_features] + hidden_layers + [1]
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
-        self.activation_functions = [None] + [NetBin._tanh] * len(hidden_layers) + [NetBin._sigmoid]
-        self.activation_function_derivatives = [None] + [NetBin._tanh_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
+        # self.activation_functions = [None] + [NetBin._tanh] * len(hidden_layers) + [NetBin._sigmoid]
+        # self.activation_function_derivatives = [None] + [NetBin._tanh_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
+
+        self.activation_functions = [None] + [NetBin._relu] * len(hidden_layers) + [NetBin._sigmoid]
+        self.activation_function_derivatives = [None] + [NetBin._relu_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
+
         for l in range(1, len(self.layers)):
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))
@@ -100,6 +104,14 @@ class NetBin:
     @staticmethod
     def _tanh_deriv(Z):
         return 1 - np.power(np.tanh(Z), 2)
+
+    @staticmethod
+    def _relu(Z):
+        return np.maximum(Z, 0)  # NB there are faster ways to implement this
+
+    @staticmethod
+    def _relu_deriv(Z):
+        return 1 * (Z > 0.0)
 
     def _regularisation(self, reg_param, n_cases):  # TODO should be a wrapper for other functions
         """Regularisation by weight decay, ie square Frobenius norm of weights. Does nothing with biases"""
@@ -148,6 +160,7 @@ class NetBin:
             self._update(weight_derivs, bias_derivs, learn_rate)
             if i % int(1. / print_frequency) == 0:  # TODO save these values and report afterwards? also checkpoint
                 print(f"NetBin: iteration={i}, cost={cost}")
+                # print(weight_derivs)
         return cost
 
     def predict(self, X):  # TODO same logic as forward pass, can we combine these?

@@ -123,51 +123,42 @@ def heart_disease():
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
 
-    # print("init scale=1.1")
-    # N = 1
-    # for _ in range(N):
-    #     cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
-    #                                                  weight_scale=1.1, alpha=0.2,
-    #                                                  n_iter=int(1e4), reg_param=0, print_freq=0.00000001)
-    #     print(f"final_cost={cost}")
-    #     print("test", test_result['roc_auc'])
-    #     print("train", train_result['roc_auc'])
-    #     print()
+    # find an example where it fails to learn, so we can debug it specifically.
+    # ie need to find what the initial parameters are
+    # for architecture in [[2, 2]]:
+    #     for reg_param in [2]:
+    #         for w_init in [0.001]: #  [0.001, 0.01, 0.1, 1, 10]:
+    #             for alpha in [0.01]:
+    #                 np.random.seed(10)
+    #                 for i in range(3):
+    #                     cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture,
+    #                                                            weight_scale=w_init, alpha=alpha,
+    #                                                            n_iter=n_iter, reg_param=reg_param,
+    #                                                            print_freq=print_freq)
+    #                     results = results.append(train_result, ignore_index=True)
+    #                     results = results.append(test_result, ignore_index=True)
+    #                     print(f"i={i}; reg_param={reg_param}; w_init={w_init}; alpha={alpha}; cost={cost}")
+    #                     print()
     #
-    # print()
-    # print()
-    # print("init scale=0.01")
-    # for _ in range(N):
-    #     cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
-    #                                                  weight_scale=0.01, alpha=0.2,
-    #                                                  n_iter=int(1e4), reg_param=0, print_freq=0.00000001)
-    #     print(f"final_cost={cost}")
-    #     print("test", test_result['roc_auc'])
-    #     print("train", train_result['roc_auc'])
-
-    for architecture in [[2, 2]]:  # TODO could make these more systemtic, for plots
-        for reg_param in [2]:
-            for w_init in [0.001, 0.01, 0.1, 1, 10]:
-                for alpha in [0.1]:
-                    for i in range(1):
-                        cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture,
-                                                               weight_scale=w_init, alpha=alpha,
-                                                               n_iter=n_iter, reg_param=reg_param,
-                                                               print_freq=print_freq)
-                        results = results.append(train_result, ignore_index=True)
-                        results = results.append(test_result, ignore_index=True)
-                print("")
-                print(f"w_init={w_init}; cost={cost}")
-
-    print(results.sort_values(['dataset', 'init']))
-
-
+    # print(results.sort_values(['dataset', 'init']))
+    print("------------")
+    np.random.seed(10)  # this one learns. it has a higher weight scale
+    cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
+                                                 weight_scale=0.1, alpha=0.01,
+                                                 n_iter=int(1e4), reg_param=2,
+                                                 print_freq=print_freq)
+    print(cost)
     print()
-    print(results[results['dataset'] == 'test'].sort_values(['roc_auc'], ascending=False).round(DEC).to_markdown(
-        showindex=False))
     print()
-    print(results[results['dataset'] == 'train'].sort_values(['roc_auc'], ascending=False).round(DEC).to_markdown(
-        showindex=False))
+    print()
+    print()
+
+    np.random.seed(10)  # this one does not learn
+    cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
+                                                 weight_scale=0.001, alpha=0.01,
+                                                 n_iter=int(1e4), reg_param=2,
+                                                 print_freq=print_freq)
+    print(cost)
 
     # TODO class balancing? implement other gradient descent algorithms?
 

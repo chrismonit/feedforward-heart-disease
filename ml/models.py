@@ -133,8 +133,8 @@ class NetBin:
             g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
             dZ = np.multiply(next_dA, g_prime_Z)
             reg_term = (reg_param / y.shape[1]) * self.weights[l]
-            dW = 1/y.shape[1] * np.dot(dZ, self.activations[l-1].T) + reg_term
-            db = 1/y.shape[1] * np.sum(dZ, axis=1, keepdims=True)
+            dW = (1/y.shape[1]) * np.dot(dZ, self.activations[l-1].T) + reg_term
+            db = (1/y.shape[1]) * np.sum(dZ, axis=1, keepdims=True)
             weight_derivs.append(dW)
             bias_derivs.append(db)
             next_dA = np.dot(self.weights[l].T, dZ)
@@ -156,7 +156,10 @@ class NetBin:
             self._update(weight_derivs, bias_derivs, learn_rate)
             if i % int(1. / print_frequency) == 0:  # TODO save these values and report afterwards? also checkpoint
                 print(f"NetBin: iteration={i}, cost={cost}")
-                # print(weight_derivs)
+                # print(f"weights={self.weights}")
+                # print(f"Z_L={self.signals[-1]}")
+                # print(f"weight_derivs={weight_derivs}")
+                # print(f"bias_derivs={bias_derivs}")
         return cost
 
     def predict(self, X):  # TODO same logic as forward pass, can we combine these?

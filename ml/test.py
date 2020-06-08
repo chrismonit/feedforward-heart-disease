@@ -8,11 +8,13 @@ REL_TOL = 0
 
 def numerical_grad():
     """Comparing weight and bias derivatives calculated by backprob with gradients calculated numerically."""
-    num_features, m = 3, 1
+    print("===============", "Testing backprop using a simple network, compared with numerical gradients",
+          "===============", sep="\n")
+    num_features, m = 30, 100
     seed = 10
     np.random.seed(seed)
     X = np.random.randn(num_features, m)  # generate fake dataset
-    y = np.expand_dims(np.array([1] * m), 0)
+    y = np.expand_dims(np.random.choice([0, 1], size=m), 0)
     epsilon = 1e-7
     print(f"X={X}", f"y={y}", f"epsilon={epsilon}", "", sep="\n")
     hidden_layers = [2, 2]
@@ -77,6 +79,7 @@ def numerical_grad():
 
 
 def forward_network():
+    print("===============", "Testing forward propagation using a simple network", "===============", sep="\n")
     # NB code below counts on these values and dimensions being fixed
     X = np.array([
         [1/2, 1/5],
@@ -182,5 +185,6 @@ def forward_network():
 
 
 if __name__ == '__main__':
-    # forward_network()
+    forward_network()
+    print()
     numerical_grad()

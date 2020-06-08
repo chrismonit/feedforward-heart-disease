@@ -212,5 +212,6 @@ def calculations():
     # print(f"Final cost:", mynet.fit(X, y, 0.1, 500, print_frequency=0.1), "", sep="\n")
     # print(f"Predictions on training data", mynet.predict(X), "", sep="\n")
 
+
 if __name__ == '__main__':
-    numerical_grad()
+    calculations()

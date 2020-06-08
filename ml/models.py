@@ -78,7 +78,7 @@ class NetBin:
 
     @staticmethod
     def _cost(y_pred, y_true):
-        cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -len(y_true)  # TODO possible bug, need y.shape[1] instead
+        cost = np.sum(y_true * np.log(y_pred+EPS) + ((1.-y_true)+EPS) * np.log((1.-y_pred)+EPS)) / -(y_true.shape[1])
         return cost.squeeze()
 
     @staticmethod

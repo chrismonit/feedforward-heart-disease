@@ -76,66 +76,6 @@ def numerical_grad():
     print(f"Passed weight gradient test when reg_param={reg_param}. Max abs difference={max_weight_abs_diff}")
 
 
-# TODO is this useful if we have shown a more complex version works?
-def forward_logistic_regression():
-    # num_features, m = 3, 1
-    seed = 10
-    X = np.array([
-        [1/2, 1/5],
-        [1/3, 1/7]
-    ])
-    y = np.array([[1, 0]])
-    W = np.array([
-        [1/11, 1/13],
-    ])
-    b = np.array([[1/17]])
-    print("Input values:")
-    print(f"X", f"{X}", "", sep="\n")
-    print(f"y", f"{y}", "", sep="\n")
-    print(f"W", f"{W}", "", sep="\n")
-    print(f"b", f"{b}", "", sep="\n")
-
-    expect_Z = np.array([
-        [ (1/11)*(1/2)+(1/13)*(1/3) + (1/17), (1/11)*(1/5)+(1/13)*(1/7) + (1/17) ],
-    ])
-
-    expect_A = 1 / (1+np.exp(-expect_Z))
-    print("Expected calculated values:")
-    print(f"Z", f"{expect_Z}", "", sep="\n")
-    print(f"A", f"{expect_A}", "", sep="\n")
-
-    np.random.seed(seed)
-    model = NetBin(X.shape[1], [], w_init_scale=0, predict_thresh=0.5)
-    model.weights[1] = W  # overriding initial params
-    model.biases[1] = b
-    print(f"Initial weights:")
-    for w in model.weights:
-        print(w)
-    print()
-    print(f"Initial biases:")
-    for b in model.biases:
-        print(b)
-    print()
-
-    cost = model._forward(X, y, reg_param=0)
-    print("Calculated values:")
-    print("signals:")
-    for Z in model.signals:
-        print(Z)
-    print()
-    print("activations:")
-    for A in model.activations:
-        print(A)
-    print()
-    print(f"cost={cost}")
-    assert model.signals[-1].shape == expect_Z.shape, "Failed logistic regression signals dimension"
-    assert all(np.isclose(model.signals[-1].squeeze(), expect_Z.squeeze(), atol=ABS_TOL)), "Failed logistic regression signals test"
-    assert model.activations[-1].shape == expect_A.shape, "Failed logistic regression activations dimension"
-    assert all(np.isclose(model.activations[-1].squeeze(), expect_A.squeeze(), atol=ABS_TOL)), "Failed logistic regression activations test"
-    # TODO test cost!
-    # TODO test with regularisation? Could just do this for the more complex one?
-
-
 def forward_network():
     # NB code below counts on these values and dimensions being fixed
     X = np.array([

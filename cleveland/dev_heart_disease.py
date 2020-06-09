@@ -144,8 +144,8 @@ def heart_disease():
     print("------------")
     np.random.seed(10)  # this one learns. it has a higher weight scale
     cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
-                                                 weight_scale=0.1, alpha=0.01,
-                                                 n_iter=int(1e4), reg_param=0,
+                                                 weight_scale=0.1, alpha=0.1,
+                                                 n_iter=int(1e4), reg_param=1,
                                                  print_freq=print_freq)
     print(cost)
     print()
@@ -155,8 +155,8 @@ def heart_disease():
 
     np.random.seed(10)  # this one does not learn
     cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=[2, 2],
-                                                 weight_scale=0.01, alpha=0.01,
-                                                 n_iter=int(1e4), reg_param=0,
+                                                 weight_scale=0.01, alpha=0.1,
+                                                 n_iter=int(1e4), reg_param=1,
                                                  print_freq=print_freq)
     print(cost)
 

@@ -2,7 +2,7 @@ import numpy as np
 from ml.models import NetBin
 
 # for np isclose, it returns: absolute(a - b) <= (atol + rtol * absolute(b))
-ABS_TOL = 1e-8
+ABS_TOL = 1e-6
 REL_TOL = 0
 
 
@@ -11,8 +11,9 @@ def numerical_grad():
     print("===============", "Testing backprop using a simple network, compared with numerical gradients",
           "===============", sep="\n")
     num_features, m = 30, 100
-    seed = 10
+    seed = None
     np.random.seed(seed)
+    rng_state = np.random.get_state()  # random number generator state
     X = np.random.randn(num_features, m)  # generate fake dataset
     y = np.expand_dims(np.random.choice([0, 1], size=m), 0)
     epsilon = 1e-7
@@ -26,18 +27,18 @@ def numerical_grad():
     bias_abs_diffs = []
     for layer in range(1, len(layers)):
         for unit in range(layers[layer]):
-            np.random.seed(seed)  # NB biases are not necessarily initialised stochastically
+            np.random.set_state(rng_state)  # NB biases are not necessarily initialised stochastically
             model_minus = NetBin(num_features, hidden_layers, w_init_scale=w_init_scale)
             model_minus.biases[layer][unit] -= epsilon
             minus_cost = model_minus._forward(X, y, reg_param=reg_param)
 
-            np.random.seed(seed)
+            np.random.set_state(rng_state)
             model_plus = NetBin(num_features, hidden_layers, w_init_scale=w_init_scale)
             model_plus.biases[layer][unit] += epsilon
             plus_cost = model_plus._forward(X, y, reg_param=reg_param)
             approx_grad = (plus_cost - minus_cost) / (2 * epsilon)
 
-            np.random.seed(seed)
+            np.random.set_state(rng_state)
             model2 = NetBin(num_features, hidden_layers, w_init_scale=w_init_scale)
             cost = model2._forward(X, y, reg_param=reg_param)
             weight_derivs, bias_derivs = model2._backward(y, reg_param)
@@ -45,7 +46,7 @@ def numerical_grad():
             bias_abs_diff = np.abs(approx_grad - backprob_deriv)
             bias_abs_diffs.append(bias_abs_diff)
     max_bias_abs_diff = np.max(bias_abs_diffs)
-    assert max_bias_abs_diff < ABS_TOL
+    assert max_bias_abs_diff < ABS_TOL, f"Max bias absolute difference={max_bias_abs_diff}"
     print(f"Passed bias gradient test when reg_param={reg_param}. Max abs difference={max_bias_abs_diff}")
 
     # Testing weight derivatives:
@@ -56,18 +57,18 @@ def numerical_grad():
                 # np.random.seed(seed)  # not necessary, used to compare with others because of random initial weights
                 # model_orig = NetBin(num_features, hidden_layers, w_init_scale=w_init_scale)
                 # orig_cost = model_orig._forward(X, y, reg_param=reg_param)
-                np.random.seed(seed)  # weights are initialised stochastically, so must reset seed every time
+                np.random.set_state(rng_state) # weights are initialised stochastically, so must reset seed every time
                 model_minus = NetBin(num_features, hidden_layers, w_init_scale=w_init_scale)
                 model_minus.weights[layer][unit, weight] -= epsilon
                 minus_cost = model_minus._forward(X, y, reg_param=reg_param)
 
-                np.random.seed(seed)
+                np.random.set_state(rng_state)
                 model_plus = NetBin(num_features, hidden_layers, w_init_scale=w_init_scale)
                 model_plus.weights[layer][unit, weight] += epsilon
                 plus_cost = model_plus._forward(X, y, reg_param=reg_param)
                 approx_grad = (plus_cost - minus_cost) / (2 * epsilon)
 
-                np.random.seed(seed)  # we effectively clone the models used above, ie has same initial random weights
+                np.random.set_state(rng_state)  # we effectively clone the models used above, ie has same initial random weights
                 model2 = NetBin(num_features, hidden_layers, w_init_scale=w_init_scale)
                 cost = model2._forward(X, y, reg_param=reg_param)
                 weight_derivs, bias_derivs = model2._backward(y, reg_param)

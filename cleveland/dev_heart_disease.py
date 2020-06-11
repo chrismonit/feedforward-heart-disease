@@ -92,7 +92,6 @@ def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1
 
 
 def heart_disease():
-    np.random.seed(10)
     LABEL = 'disease'
     DROP_FIRST = False  # for assigning dummy variables using pandas method
     data = preproc.from_file_with_dummies(os.path.join(DATA_DIR, "processed.cleveland.data.csv"), DROP_FIRST)
@@ -105,6 +104,7 @@ def heart_disease():
 
     labels = data[LABEL]
     measurements = data.drop(LABEL, axis=1)
+    np.random.seed(10)
     X_train, X_test, y_train, y_test = train_test_split(measurements, labels, test_size=0.25)
 
     X_train_scaled, X_train_means, X_train_stds = standardise(X_train)
@@ -113,6 +113,8 @@ def heart_disease():
     X = X_train_scaled.T  # rows are features, columns are training cases
     X_test = X_test_scaled.T
     y = y_train
+    print(y)
+    exit()
 
     n_features, m = X.shape
     print(f"m={m}, n_features={n_features}", "", sep="\n")
@@ -125,27 +127,30 @@ def heart_disease():
 
     # find an example where it fails to learn, so we can debug it specifically.
     # ie need to find what the initial parameters are
-    # for architecture in [[2, 2]]:
-    #     for reg_param in [2]:
-    #         for w_init in [0.001]: #  [0.001, 0.01, 0.1, 1, 10]:
-    #             for alpha in [0.01]:
-    #                 np.random.seed(10)
-    #                 for i in range(3):
-    #                     cost, train_result, test_result = experiment(X, y, X_test, y_test, architecture=architecture,
-    #                                                            weight_scale=w_init, alpha=alpha,
-    #                                                            n_iter=n_iter, reg_param=reg_param,
-    #                                                            print_freq=print_freq)
-    #                     results = results.append(train_result, ignore_index=True)
-    #                     results = results.append(test_result, ignore_index=True)
-    #                     print(f"i={i}; reg_param={reg_param}; w_init={w_init}; alpha={alpha}; cost={cost}")
-    #                     print()
-    #
-    # print(results.sort_values(['dataset', 'init']))
+    for architecture in [[2, 2]]:
+        for reg_param in [2]:
+            for w_init in [0.01]:  #  [0.001, 0.01, 0.1, 1, 10]:
+                for alpha in [0.1]:
+                    np.random.seed(10)
+                    for i in range(3):
+                        model, cost, train_result, test_result = experiment(X, y, X_test, y_test,
+                                                                            architecture=architecture,
+                                                                            weight_scale=w_init, alpha=alpha,
+                                                                            n_iter=n_iter, reg_param=reg_param,
+                                                                            print_freq=print_freq)
+                        results = results.append(train_result, ignore_index=True)
+                        results = results.append(test_result, ignore_index=True)
+                        print(f"i={i}; reg_param={reg_param}; w_init={w_init}; alpha={alpha}; cost={cost}")
+                        print()
+
+    print(results.sort_values(['dataset', 'init']))
+    exit()
+
     print("------------")
     np.random.seed(10)  # this one learns. it has a higher weight scale
     model1, cost1, train_result1, test_result1 = experiment(X, y, X_test, y_test, architecture=[2, 2],
                                                  weight_scale=0.1, alpha=0.1,
-                                                 n_iter=int(1e4), reg_param=1,
+                                                 n_iter=int(1e4), reg_param=0,
                                                  print_freq=print_freq)
     print(cost1)
     print(model1.weights)
@@ -157,7 +162,7 @@ def heart_disease():
     np.random.seed(10)  # this one does not learn
     model2, cost2, train_result2, test_result2 = experiment(X, y, X_test, y_test, architecture=[2, 2],
                                                  weight_scale=0.01, alpha=0.1,
-                                                 n_iter=int(1e4), reg_param=1,
+                                                 n_iter=int(1e4), reg_param=0,
                                                  print_freq=print_freq)
     print(cost2)
     print(model2.weights)

@@ -39,18 +39,18 @@ def performance(y_true, y_pred, dataset=np.nan):
     return result
 
 
-# TODO may need to move the np.expand_dims calls to outside of function
+# TODO could change order of args to match sklearn convention
 def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1, n_iter=1e2, reg_param=0,
                print_freq=0.1):
     """Instantiate, train and evaluate a neural network model"""
     architecture_str = "_".join([str(units) for units in architecture + [1]])
     model_info = {'arch.': architecture_str, 'init': weight_scale, 'alpha': alpha, 'n_iter': n_iter, 'reg': reg_param}
     model = NetBin(X.shape[0], architecture, w_init_scale=weight_scale)
-    cost = model.fit(X, np.expand_dims(y, 0), alpha, n_iter, reg_param=reg_param, print_frequency=print_freq)
-    train_pred = pd.Series(model.predict(X), index=X.columns, name='predict')
-    train_performance = performance(y, train_pred, dataset="train")
-    test_pred = pd.Series(model.predict(X_test), index=X_test.columns, name='predict')
-    test_performance = performance(y_test, test_pred, dataset="test")
+    cost = model.fit(X.values, y.values, alpha, int(n_iter), reg_param=reg_param, print_frequency=print_freq)
+    train_pred = pd.Series(model.predict(X.values), index=X.columns, name='predict').to_frame().T
+    train_performance = performance(y.values.squeeze(), train_pred.values.squeeze(), dataset="train")
+    test_pred = pd.Series(model.predict(X_test.values), index=X_test.columns, name='predict').to_frame().T
+    test_performance = performance(y_test.values.squeeze(), test_pred.values.squeeze(), dataset="test")
     return model, cost, {**model_info, **train_performance}, {**model_info, **test_performance}
 
 
@@ -115,7 +115,14 @@ def hp_search():
     # TODO this may mess up the experiment function, because it assumes you need to reshape y
     folds_X_train, folds_X_val, folds_y_train, folds_y_val = reshape_folds(folds_X_train, folds_X_val,
                                                                            folds_y_train, folds_y_val)
+    for i in range(n_folds):
+        print(folds_y_train[i].values.shape)
+    print("here")
+    model, cost, train_perf, val_perf = experiment(folds_X_train[0], folds_y_train[0],
+                                                   folds_X_val[0], folds_y_val[0], architecture=[2])
 
+    print(train_perf)
+    print(val_perf)
     exit()
 
     n_features, m = X.shape  # TODO

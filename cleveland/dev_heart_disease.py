@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 from sklearn import metrics
 
 from cleveland import preproc
@@ -13,11 +14,16 @@ ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 DEC = 3
 
+LABEL = 'disease'
+DROP_FIRST = False  # for assigning dummy variables using pandas method
+FILE_PATH = "processed.cleveland.data.csv"
+EPSILON = 1e-9
+
 
 def standardise(df):
     means = df.mean()
     stds = df.std()
-    standardised = (df - means).div(stds)
+    standardised = (df - means).div(stds + EPSILON)  # avoid zero div problem
     return standardised, means, stds
 
 
@@ -33,6 +39,7 @@ def performance(y_true, y_pred, dataset=np.nan):
     return result
 
 
+# TODO may need to move the np.expand_dims calls to outside of function
 def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1, n_iter=1e2, reg_param=0,
                print_freq=0.1):
     """Instantiate, train and evaluate a neural network model"""
@@ -47,32 +54,71 @@ def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1
     return model, cost, {**model_info, **train_performance}, {**model_info, **test_performance}
 
 
-def heart_disease():
-    LABEL = 'disease'
-    DROP_FIRST = False  # for assigning dummy variables using pandas method
-    data = preproc.from_file_with_dummies(os.path.join(DATA_DIR, "processed.cleveland.data.csv"), DROP_FIRST)
-    # signal_catagorical = ['sex', 'cp', 'exang', 'slope', 'thal']  # features found to have significant differences
-    # signal_quantitative = ['age', 'thalach', 'oldpeak', 'ca']
-    # signal_features = signal_catagorical + signal_quantitative
-    # features_to_use = [col for col in data.columns for feature in signal_features if
-    #  col == feature or col.startswith(feature + preproc_cleveland.DUMMY_SEPARATOR)]
-    # # data = data[[LABEL] + features_to_use]
+def tmp_kfolds_example():
+    X = np.array([[.1, .2], [.3, .4], [.1, .2], [.3, .4]])
+    y = np.array([1, 2, 3, 4])
+    kf = KFold(n_splits=2, shuffle=True, random_state=10)
+    kf.get_n_splits(X)
+    for train_index, test_index in kf.split(X):
+        print("TRAIN:", train_index, "TEST:", test_index)
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
 
+
+def split_folds(X, y, standardise_data=True, **kwargs):
+    # NB this assumes rows are cases, columns are features
+    kf = KFold(**kwargs)
+    folds_X_train, folds_X_val, folds_y_train, folds_y_val = [], [], [], []
+    for train_index, val_index in kf.split(X):
+        folds_X_train.append(X.iloc[train_index])
+        folds_X_val.append(X.iloc[val_index])
+        folds_y_train.append(y.iloc[train_index])
+        folds_y_val.append(y.iloc[val_index])
+
+    if standardise_data:
+        for i in range(kf.get_n_splits()):
+            X_train_scaled, X_train_means, X_train_stds = standardise(folds_X_train[i])
+            X_val_scaled = (folds_X_val[i] - X_train_means).div(X_train_stds + EPSILON)  # avoid zero div problem
+            folds_X_train[i] = X_train_scaled
+            folds_X_val[i] = X_val_scaled
+    return folds_X_train, folds_X_val, folds_y_train, folds_y_val
+
+
+def reshape_folds(folds_X_train, folds_X_val, folds_y_train, folds_y_val):
+    assert len(folds_X_train) == len(folds_X_val) == len(folds_y_train) == len(folds_y_val), "Unequal fold numbers"
+    for i in range(len(folds_X_train)):
+        folds_X_train[i] = folds_X_train[i].T
+        folds_X_val[i] = folds_X_val[i].T
+        folds_y_train[i] = folds_y_train[i].to_frame().T
+        folds_y_val[i] = folds_y_val[i].to_frame().T
+    return folds_X_train, folds_X_val, folds_y_train, folds_y_val
+
+
+def hp_search():
+    data = preproc.from_file_with_dummies(os.path.join(DATA_DIR, FILE_PATH), DROP_FIRST)
     labels = data[LABEL]
     measurements = data.drop(LABEL, axis=1)
     np.random.seed(10)
-    X_train, X_test, y_train, y_test = train_test_split(measurements, labels, test_size=0.25)
+    # Split into CV and test sets
+    # TODO move this outside of this function?
+    X_train_val, X_test, y_train_val, y_test = train_test_split(measurements, labels, test_size=0.2)
 
-    X_train_scaled, X_train_means, X_train_stds = standardise(X_train)
-    X_test_scaled = (X_test - X_train_means).div(X_train_stds)
+    n_folds = 4
+    folds_X_train, folds_X_val, folds_y_train, folds_y_val = split_folds(X_train_val, y_train_val,
+                                                                         standardise_data=True, n_splits=n_folds,
+                                                                         random_state=None, shuffle=True)
 
-    X = X_train_scaled.T  # rows are features, columns are training cases
-    X_test = X_test_scaled.T
-    y = y_train
-    print(y)
+    # for experiment in experiments, the set of hyperparameters to try
+        # for fold in folds:
+            # train model using those hyperparameters, save performance measures on val set
+        # take average performance measures across folds
+    # TODO this may mess up the experiment function, because it assumes you need to reshape y
+    folds_X_train, folds_X_val, folds_y_train, folds_y_val = reshape_folds(folds_X_train, folds_X_val,
+                                                                           folds_y_train, folds_y_val)
+
     exit()
 
-    n_features, m = X.shape
+    n_features, m = X.shape  # TODO
     print(f"m={m}, n_features={n_features}", "", sep="\n")
     results = pd.DataFrame(columns=['arch.', 'init', 'alpha', 'n_iter', 'reg', 'dataset',
                                     'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp', 'fn', 'tp'])
@@ -127,4 +173,5 @@ def heart_disease():
 
 
 if __name__ == '__main__':
-    heart_disease()
+    # tmp_kfolds_example()
+    hp_search()

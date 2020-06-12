@@ -50,7 +50,7 @@ def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1
     train_pred = pd.Series(model.predict(X.values), index=X.columns, name='predict').to_frame().T
     train_performance = performance(y.values.squeeze(), train_pred.values.squeeze(), dataset="train")
     test_pred = pd.Series(model.predict(X_test.values), index=X_test.columns, name='predict').to_frame().T
-    test_performance = performance(y_test.values.squeeze(), test_pred.values.squeeze(), dataset="test")
+    test_performance = performance(y_test.values.squeeze(), test_pred.values.squeeze(), dataset="val/test")
     return model, cost, {**model_info, **train_performance}, {**model_info, **test_performance}
 
 
@@ -112,52 +112,74 @@ def hp_search():
         # for fold in folds:
             # train model using those hyperparameters, save performance measures on val set
         # take average performance measures across folds
-    # TODO this may mess up the experiment function, because it assumes you need to reshape y
     folds_X_train, folds_X_val, folds_y_train, folds_y_val = reshape_folds(folds_X_train, folds_X_val,
                                                                            folds_y_train, folds_y_val)
     for i in range(n_folds):
         print(folds_y_train[i].values.shape)
-    print("here")
-    model, cost, train_perf, val_perf = experiment(folds_X_train[0], folds_y_train[0],
-                                                   folds_X_val[0], folds_y_val[0], architecture=[2])
+    # model, cost, train_perf, val_perf = experiment(folds_X_train[0], folds_y_train[0],
+    #                                                folds_X_val[0], folds_y_val[0], architecture=[2])
 
-    print(train_perf)
-    print(val_perf)
+    shared_cols = ['exp_id', 'arch.', 'init', 'alpha', 'n_iter', 'reg', 'dataset', 'roc_auc', 'sens.', 'spec.', 'acc.',
+                   'tn', 'fp', 'fn', 'tp']
+
+    train_results = pd.DataFrame(columns=shared_cols+['cost'])
+    val_results = pd.DataFrame(columns=shared_cols)
+
+    n_prints = 5
+    exp_id = 0
+    for architecture in [[], [2], [4], [8]]:
+        for reg_param in [0, 1, 2]:
+            for w_init in [0.01]:  #  [0.001, 0.01, 0.1, 1, 10]:
+                for n_iter in [1e4]:
+                    for alpha in [0.01, 0.1, 1]:
+
+                        settings = dict(zip(['architecture', 'reg_param', 'weight_scale', 'alpha', 'n_iter',
+                                             'print_freq'],
+                                        [architecture, reg_param, w_init, alpha, n_iter, n_prints/n_iter]))
+                        # TODO for each fold:
+                        model, cost, train_perf, val_perf = experiment(folds_X_train[0], folds_y_train[0],
+                                                                       folds_X_val[0], folds_y_val[0], **settings)
+                        train_perf['cost'] = cost
+                        train_perf['exp_id'], val_perf['exp_id'] = exp_id, exp_id
+                        train_results = train_results.append(train_perf, ignore_index=True)
+                        val_results = val_results.append(val_perf, ignore_index=True)
+                        exp_id += 1
+
+    print(train_results)
+    print()
+    print()
+    print(val_results)
+
     exit()
-
-    n_features, m = X.shape  # TODO
-    print(f"m={m}, n_features={n_features}", "", sep="\n")
-    results = pd.DataFrame(columns=['arch.', 'init', 'alpha', 'n_iter', 'reg', 'dataset',
-                                    'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp', 'fn', 'tp'])
     n_iter = int(1 * 1e4)
     alpha = 0.15
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
 
-    # find an example where it fails to learn, so we can debug it specifically.
-    # ie need to find what the initial parameters are
-    for architecture in [[2, 2]]:
-        for reg_param in [2]:
-            for w_init in [0.01]:  #  [0.001, 0.01, 0.1, 1, 10]:
-                for alpha in [0.1]:
-                    np.random.seed(10)
-                    for i in range(3):
-                        model, cost, train_result, test_result = experiment(X, y, X_test, y_test,
-                                                                            architecture=architecture,
-                                                                            weight_scale=w_init, alpha=alpha,
-                                                                            n_iter=n_iter, reg_param=reg_param,
-                                                                            print_freq=print_freq)
-                        results = results.append(train_result, ignore_index=True)
-                        results = results.append(test_result, ignore_index=True)
-                        print(f"i={i}; reg_param={reg_param}; w_init={w_init}; alpha={alpha}; cost={cost}")
-                        print()
-
-    print(results.sort_values(['dataset', 'init']))
-    exit()
+    # # find an example where it fails to learn, so we can debug it specifically.
+    # # ie need to find what the initial parameters are
+    # for architecture in [[2, 2]]:
+    #     for reg_param in [2]:
+    #         for w_init in [0.01]:  #  [0.001, 0.01, 0.1, 1, 10]:
+    #             for alpha in [0.1]:
+    #                 np.random.seed(10)
+    #                 for i in range(3):
+    #                     model, cost, train_result, test_result = experiment(X_train_val, y_train_val, X_test, y_test,
+    #                                                                         architecture=architecture,
+    #                                                                         weight_scale=w_init, alpha=alpha,
+    #                                                                         n_iter=n_iter, reg_param=reg_param,
+    #                                                                         print_freq=print_freq)
+    #                     results = results.append(train_result, ignore_index=True)
+    #                     results = results.append(test_result, ignore_index=True)
+    #                     print(f"i={i}; reg_param={reg_param}; w_init={w_init}; alpha={alpha}; cost={cost}")
+    #                     print()
+    #
+    # print(results.sort_values(['dataset', 'init']))
+    # exit()
 
     print("------------")
     np.random.seed(10)  # this one learns. it has a higher weight scale
-    model1, cost1, train_result1, test_result1 = experiment(X, y, X_test, y_test, architecture=[2, 2],
+    model1, cost1, train_result1, test_result1 = experiment(X_train_val, y_train_val, X_test, y_test, architecture=[2, 2],
                                                  weight_scale=0.1, alpha=0.1,
                                                  n_iter=int(1e4), reg_param=0,
                                                  print_freq=print_freq)

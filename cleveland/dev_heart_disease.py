@@ -96,12 +96,12 @@ def reshape_folds(folds_X_train, folds_X_val, folds_y_train, folds_y_val):
 
 
 def hp_search():
+    # TODO move this outside of this function?  ie could supply only the train/val dataset for hp search
     data = preproc.from_file_with_dummies(os.path.join(DATA_DIR, FILE_PATH), DROP_FIRST)
     labels = data[LABEL]
     measurements = data.drop(LABEL, axis=1)
     np.random.seed(10)
     # Split into CV and test sets
-    # TODO move this outside of this function?
     X_train_val, X_test, y_train_val, y_test = train_test_split(measurements, labels, test_size=0.2)
 
     n_folds = 4
@@ -109,16 +109,8 @@ def hp_search():
                                                                          standardise_data=True, n_splits=n_folds,
                                                                          random_state=None, shuffle=True)
 
-    # for experiment in experiments, the set of hyperparameters to try
-        # for fold in folds:
-            # train model using those hyperparameters, save performance measures on val set
-        # take average performance measures across folds
     folds_X_train, folds_X_val, folds_y_train, folds_y_val = reshape_folds(folds_X_train, folds_X_val,
                                                                            folds_y_train, folds_y_val)
-    for i in range(n_folds):
-        print(folds_y_train[i].values.shape)
-    # model, cost, train_perf, val_perf = experiment(folds_X_train[0], folds_y_train[0],
-    #                                                folds_X_val[0], folds_y_val[0], architecture=[2])
 
     shared_cols = ['fold', 'dataset', 'arch.', 'init', 'alpha', 'n_iter', 'reg',
                    'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp', 'fn', 'tp']
@@ -153,34 +145,11 @@ def hp_search():
                         val_results.to_csv(os.path.join(OUT_DIR, "val_results.csv"), mode='a', header=False,
                                            index=False)
 
-
-
     exit()
     n_iter = int(1 * 1e4)
     alpha = 0.15
     n_print_statements = 5
     print_freq = n_print_statements / n_iter
-
-    # # find an example where it fails to learn, so we can debug it specifically.
-    # # ie need to find what the initial parameters are
-    # for architecture in [[2, 2]]:
-    #     for reg_param in [2]:
-    #         for w_init in [0.01]:  #  [0.001, 0.01, 0.1, 1, 10]:
-    #             for alpha in [0.1]:
-    #                 np.random.seed(10)
-    #                 for i in range(3):
-    #                     model, cost, train_result, test_result = experiment(X_train_val, y_train_val, X_test, y_test,
-    #                                                                         architecture=architecture,
-    #                                                                         weight_scale=w_init, alpha=alpha,
-    #                                                                         n_iter=n_iter, reg_param=reg_param,
-    #                                                                         print_freq=print_freq)
-    #                     results = results.append(train_result, ignore_index=True)
-    #                     results = results.append(test_result, ignore_index=True)
-    #                     print(f"i={i}; reg_param={reg_param}; w_init={w_init}; alpha={alpha}; cost={cost}")
-    #                     print()
-    #
-    # print(results.sort_values(['dataset', 'init']))
-    # exit()
 
     print("------------")
     np.random.seed(10)  # this one learns. it has a higher weight scale
@@ -191,12 +160,9 @@ def hp_search():
     print(cost1)
     print(model1.weights)
     print()
-    print()
-    print()
-    print()
 
     np.random.seed(10)  # this one does not learn
-    model2, cost2, train_result2, test_result2 = experiment(X, y, X_test, y_test, architecture=[2, 2],
+    model2, cost2, train_result2, test_result2 = experiment(X_train_val, y_train_val, X_test, y_test, architecture=[2, 2],
                                                  weight_scale=0.01, alpha=0.1,
                                                  n_iter=int(1e4), reg_param=0,
                                                  print_freq=print_freq)

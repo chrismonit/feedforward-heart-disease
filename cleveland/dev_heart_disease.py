@@ -12,6 +12,7 @@ pd.options.display.width = 0  # adjust according to terminal width
 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src/<package>
 DATA_DIR = os.path.join(ROOT_DIR, "data")
+OUT_DIR = os.path.join(ROOT_DIR, "out")
 DEC = 3
 
 LABEL = 'disease'
@@ -119,36 +120,40 @@ def hp_search():
     # model, cost, train_perf, val_perf = experiment(folds_X_train[0], folds_y_train[0],
     #                                                folds_X_val[0], folds_y_val[0], architecture=[2])
 
-    shared_cols = ['exp_id', 'arch.', 'init', 'alpha', 'n_iter', 'reg', 'dataset', 'roc_auc', 'sens.', 'spec.', 'acc.',
-                   'tn', 'fp', 'fn', 'tp']
+    shared_cols = ['fold', 'dataset', 'arch.', 'init', 'alpha', 'n_iter', 'reg',
+                   'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp', 'fn', 'tp']
 
-    train_results = pd.DataFrame(columns=shared_cols+['cost'])
-    val_results = pd.DataFrame(columns=shared_cols)
-
+    pd.DataFrame(columns=shared_cols + ['cost']).to_csv(os.path.join(OUT_DIR, "train_results.csv"), index=False)
+    pd.DataFrame(columns=shared_cols).to_csv(os.path.join(OUT_DIR, "val_results.csv"), index=False)
     n_prints = 5
-    exp_id = 0
-    for architecture in [[], [2], [4], [8]]:
-        for reg_param in [0, 1, 2]:
+    # TODO may want to use the same weights for every experiment, distinguish initial param variance and fold variance
+    for architecture in [[], [2], [3], [4], [2, 2], [3, 2], [4, 2]]:
+        for reg_param in [0.0, 0.5, 1, 1.5, 2]:
             for w_init in [0.01]:  #  [0.001, 0.01, 0.1, 1, 10]:
                 for n_iter in [1e4]:
                     for alpha in [0.01, 0.1, 1]:
-
+                        train_results = pd.DataFrame(columns=shared_cols + ['cost'])
+                        val_results = pd.DataFrame(columns=shared_cols)
                         settings = dict(zip(['architecture', 'reg_param', 'weight_scale', 'alpha', 'n_iter',
                                              'print_freq'],
                                         [architecture, reg_param, w_init, alpha, n_iter, n_prints/n_iter]))
-                        # TODO for each fold:
-                        model, cost, train_perf, val_perf = experiment(folds_X_train[0], folds_y_train[0],
-                                                                       folds_X_val[0], folds_y_val[0], **settings)
-                        train_perf['cost'] = cost
-                        train_perf['exp_id'], val_perf['exp_id'] = exp_id, exp_id
-                        train_results = train_results.append(train_perf, ignore_index=True)
-                        val_results = val_results.append(val_perf, ignore_index=True)
-                        exp_id += 1
+                        print(settings)
 
-    print(train_results)
-    print()
-    print()
-    print(val_results)
+                        for i_fold in range(n_folds):
+                            model, cost, train_perf, val_perf = experiment(folds_X_train[i_fold], folds_y_train[i_fold],
+                                                                           folds_X_val[i_fold], folds_y_val[i_fold],
+                                                                           **settings)
+
+                            train_perf['cost'] = cost
+                            train_perf['fold'], val_perf['fold'] = i_fold, i_fold
+                            train_results = train_results.append(train_perf, ignore_index=True)
+                            val_results = val_results.append(val_perf, ignore_index=True)
+                        train_results.to_csv(os.path.join(OUT_DIR, "train_results.csv"), mode='a', header=False,
+                                             index=False)
+                        val_results.to_csv(os.path.join(OUT_DIR, "val_results.csv"), mode='a', header=False,
+                                           index=False)
+
+
 
     exit()
     n_iter = int(1 * 1e4)

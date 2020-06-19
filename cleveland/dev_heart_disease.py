@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn import metrics
 
 from cleveland import preproc
@@ -55,22 +55,22 @@ def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1
     return model, cost, {**model_info, **train_performance}, {**model_info, **test_performance}
 
 
-def tmp_kfolds_example():
-    X = np.array([[.1, .2], [.3, .4], [.1, .2], [.3, .4]])
-    y = np.array([1, 2, 3, 4])
-    kf = KFold(n_splits=2, shuffle=True, random_state=10)
-    kf.get_n_splits(X)
-    for train_index, test_index in kf.split(X):
-        print("TRAIN:", train_index, "TEST:", test_index)
-        X_train, X_test = X[train_index], X[test_index]
-        y_train, y_test = y[train_index], y[test_index]
+# def tmp_kfolds_example():
+#     X = np.array([[.1, .2], [.3, .4], [.1, .2], [.3, .4]])
+#     y = np.array([1, 2, 3, 4])
+#     kf = KFold(n_splits=2, shuffle=True, random_state=10)
+#     kf.get_n_splits(X)
+#     for train_index, test_index in kf.split(X):
+#         print("TRAIN:", train_index, "TEST:", test_index)
+#         X_train, X_test = X[train_index], X[test_index]
+#         y_train, y_test = y[train_index], y[test_index]
 
 
 def split_folds(X, y, standardise_data=True, **kwargs):
     # NB this assumes rows are cases, columns are features
-    kf = KFold(**kwargs)
+    kf = StratifiedKFold(**kwargs)
     folds_X_train, folds_X_val, folds_y_train, folds_y_val = [], [], [], []
-    for train_index, val_index in kf.split(X):
+    for train_index, val_index in kf.split(X, y):
         folds_X_train.append(X.iloc[train_index])
         folds_X_val.append(X.iloc[val_index])
         folds_y_train.append(y.iloc[train_index])
@@ -96,7 +96,7 @@ def reshape_folds(folds_X_train, folds_X_val, folds_y_train, folds_y_val):
 
 
 def hp_search():
-    # TODO move this outside of this function?  ie could supply only the train/val dataset for hp search
+    # TODO move this outside of this function, ie could supply only the train/val dataset for hp search
     data = preproc.from_file_with_dummies(os.path.join(DATA_DIR, FILE_PATH), DROP_FIRST)
     labels = data[LABEL]
     measurements = data.drop(LABEL, axis=1)
@@ -115,15 +115,31 @@ def hp_search():
     shared_cols = ['fold', 'dataset', 'arch.', 'init', 'alpha', 'n_iter', 'reg',
                    'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp', 'fn', 'tp']
 
-    pd.DataFrame(columns=shared_cols + ['cost']).to_csv(os.path.join(OUT_DIR, "train_results.csv"), index=False)
-    pd.DataFrame(columns=shared_cols).to_csv(os.path.join(OUT_DIR, "val_results.csv"), index=False)
+    # pd.DataFrame(columns=shared_cols + ['cost']).to_csv(os.path.join(OUT_DIR, "train_results.csv"), index=False)
+    # pd.DataFrame(columns=shared_cols).to_csv(os.path.join(OUT_DIR, "val_results.csv"), index=False)
     n_prints = 5
-    # TODO may want to use the same weights for every experiment, distinguish initial param variance and fold variance
-    for architecture in [[], [2], [3], [4], [2, 2], [3, 2], [4, 2]]:
-        for reg_param in [0.0, 0.5, 1, 1.5, 2]:
-            for w_init in [0.01]:  #  [0.001, 0.01, 0.1, 1, 10]:
-                for n_iter in [1e4]:
-                    for alpha in [0.01, 0.1, 1]:
+
+    # Coarse search:  # TODO could make a grid search object to house these? sci kit learn may have something
+    # architectures = [[1], [2], [4], [8], [16], [2, 2], [2, 4], [2, 8], [2, 16], [4, 2], [4, 4], [4, 8],
+    #                  [4, 16], [8, 2], [8, 4], [8, 8], [8, 16], [16, 2], [16, 4], [16, 8], [16, 16, 1]]
+    # reg_params = [0.0, 0.5, 1.0, 1.5]
+    # w_inits = [0.01]
+    # n_iters = [1e4]
+    # alphas = [0.01, 0.05, 0.1, 0.5, 1]
+
+    # Finer search:
+    architectures = [[2], [2, 2]]
+    reg_params = [0, 0.1, 0.2, 0.3]
+    w_inits = [0.01]
+    n_iters = [1e4]
+    alphas = [0.8, 0.9, 1, 1.1, 1.2]
+    train_file = os.path.join(OUT_DIR, "fine.train_results.csv")
+    val_file = os.path.join(OUT_DIR, "fine.val_results.csv")
+    for architecture in architectures:
+        for reg_param in reg_params:
+            for w_init in w_inits:
+                for n_iter in n_iters:
+                    for alpha in alphas:
                         train_results = pd.DataFrame(columns=shared_cols + ['cost'])
                         val_results = pd.DataFrame(columns=shared_cols)
                         settings = dict(zip(['architecture', 'reg_param', 'weight_scale', 'alpha', 'n_iter',
@@ -132,6 +148,7 @@ def hp_search():
                         print(settings)
 
                         for i_fold in range(n_folds):
+                            np.random.seed(10)  # same initial weights for each fold, variance attributable to fold only
                             model, cost, train_perf, val_perf = experiment(folds_X_train[i_fold], folds_y_train[i_fold],
                                                                            folds_X_val[i_fold], folds_y_val[i_fold],
                                                                            **settings)
@@ -140,36 +157,8 @@ def hp_search():
                             train_perf['fold'], val_perf['fold'] = i_fold, i_fold
                             train_results = train_results.append(train_perf, ignore_index=True)
                             val_results = val_results.append(val_perf, ignore_index=True)
-                        train_results.to_csv(os.path.join(OUT_DIR, "train_results.csv"), mode='a', header=False,
-                                             index=False)
-                        val_results.to_csv(os.path.join(OUT_DIR, "val_results.csv"), mode='a', header=False,
-                                           index=False)
-
-    exit()
-    n_iter = int(1 * 1e4)
-    alpha = 0.15
-    n_print_statements = 5
-    print_freq = n_print_statements / n_iter
-
-    print("------------")
-    np.random.seed(10)  # this one learns. it has a higher weight scale
-    model1, cost1, train_result1, test_result1 = experiment(X_train_val, y_train_val, X_test, y_test, architecture=[2, 2],
-                                                 weight_scale=0.1, alpha=0.1,
-                                                 n_iter=int(1e4), reg_param=0,
-                                                 print_freq=print_freq)
-    print(cost1)
-    print(model1.weights)
-    print()
-
-    np.random.seed(10)  # this one does not learn
-    model2, cost2, train_result2, test_result2 = experiment(X_train_val, y_train_val, X_test, y_test, architecture=[2, 2],
-                                                 weight_scale=0.01, alpha=0.1,
-                                                 n_iter=int(1e4), reg_param=0,
-                                                 print_freq=print_freq)
-    print(cost2)
-    print(model2.weights)
-
-    # TODO class balancing? implement other gradient descent algorithms?
+                        train_results.to_csv(train_file, mode='a', header=False, index=False)
+                        val_results.to_csv(val_file, mode='a', header=False, index=False)
 
 
 if __name__ == '__main__':

@@ -10,9 +10,10 @@ DATA_DIR = os.path.join(ROOT_DIR, "data")
 OUT_DIR = os.path.join(ROOT_DIR, "out")
 DEC = 4
 
-FILE = "val_results.csv"
+FILE = "fine.val_results.csv"
 
 
+# TODO separate into distict functions for coarse and fine fine grain search results
 def hp_results():
     """Analyse results from hyperparameter grid searches"""
     file_path = os.path.join(OUT_DIR, FILE)
@@ -35,18 +36,21 @@ def hp_results():
     print("Just mean AUC, unstacked along architecture index dimension, so easier to compare conditions")
     avg_auc = avg.sort_values('roc_auc', ascending=False)['roc_auc'].unstack(level=0)
     # Order columns by architecture complexity:
-    avg_auc = avg_auc[['1', '2_1', '4_1', '8_1', '16_1', '2_2_1', '2_4_1', '2_8_1', '2_16_1', '4_2_1',
-                                     '4_4_1', '4_8_1', '4_16_1', '8_2_1', '8_4_1', '8_8_1', '8_16_1', '16_2_1',
-                                     '16_4_1', '16_8_1', '16_16_1']]
+    # avg_auc = avg_auc[['1', '2_1', '4_1', '8_1', '16_1', '2_2_1', '2_4_1', '2_8_1', '2_16_1', '4_2_1',
+    #                                  '4_4_1', '4_8_1', '4_16_1', '8_2_1', '8_4_1', '8_8_1', '8_16_1', '16_2_1',
+    #                                  '16_4_1', '16_8_1', '16_16_1']]
+
     print(avg_auc)
 
     # Heatmap showing AUC for each of these conditions
     fig, ax = plt.subplots()
-    mappable = ax.matshow(avg_auc)
-    mappable.set_clim(0.5, 1.0)  # TODO change range for fine grain
+    # mappable = ax.matshow(avg_auc)  # Coarse grain
+    mappable = ax.matshow(avg_auc, cmap='bwr')  # fine grain
+    # mappable.set_clim(0.5, 1.0)  # course grain
+    mappable.set_clim(0.82, 0.88)  # fine grain
     ax.set_xticks(range(avg_auc.shape[1]))
     ax.set_xticklabels(avg_auc.columns)
-    ax.tick_params(axis='x', labelrotation=45)
+    ax.tick_params(axis='x', labelrotation=90)
     ax.set_xlabel("Units per layer")
     ax.xaxis.set_label_position('top')
 
@@ -57,7 +61,11 @@ def hp_results():
     fig.colorbar(mappable, ax=ax)
 
     print(f"Using file: {file_path}")
+    plt.tight_layout()
     plt.show()
+
+
+# TODO test set performance, including ROC
 
 
 if __name__ == '__main__':

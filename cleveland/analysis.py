@@ -13,7 +13,8 @@ DEC = 4
 FILE = "val_results.csv"
 
 
-def main():
+def hp_results():
+    """Analyse results from hyperparameter grid searches"""
     file_path = os.path.join(OUT_DIR, FILE)
     print(f"Using file: {file_path}")
     results = pd.read_csv(file_path).drop_duplicates()  # Results from cross validation
@@ -25,13 +26,6 @@ def main():
     with pd.option_context('display.max_rows', None):
         print(avg.sort_values('roc_auc', ascending=False))
 
-    # print()
-    # print("--------- Subset of conditions: --------- ")  # all metrics for these conditions only
-    # subset = results[results['init'].isin([0.01]) & results['n_iter'].isin([4]) &
-    #                  results['alpha'].isin([0.01, 0.1, 0.5, 1.0]) & results['reg'].isin([0., 0.5, 1, 2.])]
-    # avg_subset = subset.drop('fold', axis=1).groupby(exp_cols).mean().droplevel(level=[1, 3])  # drop init and n_iter
-    # print("Top 5 models from reduced set of conditions:")
-    # # reset index to incorporate the multiindex as columns
     avg = avg.droplevel(level=['init', 'n_iter'])
     to_drop = ['tn', 'fp', 'fn', 'tp']
     print(avg.sort_values('roc_auc', ascending=False).drop(to_drop, axis=1)
@@ -49,7 +43,7 @@ def main():
     # Heatmap showing AUC for each of these conditions
     fig, ax = plt.subplots()
     mappable = ax.matshow(avg_auc)
-    mappable.set_clim(0.5, 1.0)
+    mappable.set_clim(0.5, 1.0)  # TODO change range for fine grain
     ax.set_xticks(range(avg_auc.shape[1]))
     ax.set_xticklabels(avg_auc.columns)
     ax.tick_params(axis='x', labelrotation=45)
@@ -60,11 +54,11 @@ def main():
     ax.set_yticklabels(avg_auc.index)
     ax.set_ylabel("(learning rate, regularisation term)")
 
-    fig.colorbar(mappable, ax=ax)  # todo make this range up to 1
+    fig.colorbar(mappable, ax=ax)
 
     print(f"Using file: {file_path}")
     plt.show()
 
 
 if __name__ == '__main__':
-    main()
+    hp_results()

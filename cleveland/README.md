@@ -63,6 +63,7 @@ The figures below summarise the influence of hyperparameters on mean ROC AUC fro
 <div align="center">
     <img src="../docs/cleveland/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
 </div>
+<div></div>
 <div align="center">
     Hyperparameter grid search, mean AUC on cross validation training datasets. 
 </div>
@@ -71,6 +72,7 @@ The figures below summarise the influence of hyperparameters on mean ROC AUC fro
 <div align="center">
     <img src="../docs/cleveland/coarse_val_mean_auc.png" alt="Correlation matrix" width="600"/>
 </div>
+<div></div>
 <div align="center">
     Hyperparameter grid search, mean AUC on cross validation validation datasets. 
 </div>

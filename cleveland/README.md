@@ -52,28 +52,30 @@ Computing Kendall's rank correlation coefficient between features (with categori
 ### Binary classification neural network models
 
 #### Models
-Simple, fully connected architectures with units in hidden layers using hyperbolic tangent ('tanh') activation functions and the final output layer comprising a single sigmoid function unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to 2 hidden layers, comprising up to 16 units each. We use the notation 'n_m_1' to represent a network with two hidden layers comprising n and m units respectively, with a single sigmoid output unit. Weight and bias parameters were determined by 10,000 iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with a range of regularisation parameter (lambda) values. 
+We evaluated a set of fully connected neural network architectures with up to two hidden layers using hyperbolic tangent ('tanh') activation functions and an output layer comprising a single sigmoid unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to 2 hidden layers, comprising up to 16 units each. We use the notation 'n_m_1' to represent a network with two hidden layers comprising n and m units respectively, with a single sigmoid output unit. Weight and bias parameters were determined by 10,000 iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with a range of regularisation parameter (lambda) values. 
 
 #### Model training and validation
 
 All 13 features were used, with categorical features transformed into multiple binary features using one hot encoding (see methods). 20% of the total dataset was uniformly randomly subsampled, preserving the proportions of CHD and non-CHD cases, and reserved as a test set. The remaining 80% was used for hyperparameter tuning using 4-fold cross validation, by uniformly randomly subsampling 4 non-overlapping validation sets and for each of these using the remaining 3 folds for training each model, before measuring the models' performances on the given validation set. Proportions of CHD and non-CHD cases were preserved amongst folds. Area under the ROC curve (AUC) was chosen as a performance metric to compare models, as this summarises the compromise between a model's sensitivity and specificity. For each experimental condition the mean AUC was calculated across the 4 validation folds.
 
-The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, with over a range of hyperparameter values:
+The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, over a range of hyperparameter values:
 
 <p align="center">
 <img src="../docs/cleveland/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
-</p>
 Hyperparameter grid search, mean AUC on cross validation training datasets. 
+</p>
+
 
 <p align="center">
 <img src="../docs/cleveland/coarse_val_mean_auc.png" alt="Correlation matrix" width="600"/>
-</p>
 Hyperparameter grid search, mean AUC on cross validation validation datasets. 
+</p>
 
-While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets for most models. However, several of the models two two hidden layers have failed to learn, in particularly with the lowest learning rate. This same grid search was attempted using ReLu activation functions for units in each hidden layer, but these had poorer performance outcomes (data not shown). 
+While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets for most models. However, several of the models comprising two hidden layers have failed to learn, in particular with lower learning rates. This same grid search was attempted using ReLU activation functions for units in each hidden layer, but these had poorer performance outcomes (data not shown). 
 
 Performance metrics of the five (tanh-activation) models with highest ROC AUC are shown below:
 
+<p align="center">
 |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |--------:|--------:|------:|----------:|--------:|--------:|-------:|
 |     2_1 |     1   |   0   |    0.869  |  0.8806 |  0.8574 | 0.8677 |
@@ -81,6 +83,7 @@ Performance metrics of the five (tanh-activation) models with highest ROC AUC ar
 |     2_1 |     0.5 |   0   |    0.8596 |  0.8621 |  0.8572 | 0.8593 |
 |   2_2_1 |     0.1 |   0   |    0.8513 |  0.8528 |  0.8498 | 0.851  |
 |   2_4_1 |     0.1 |   0.5 |    0.8486 |  0.8251 |  0.8721 | 0.851  |
+</p>
 
 We then pursued a finer grid search over a narrower range of values in this high-performing region of the hyperparameter space, and measured model performance as before:
 
@@ -90,6 +93,7 @@ We then pursued a finer grid search over a narrower range of values in this high
 
 The five highest performing models were as follows: 
 
+<p align="center">
 |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |--------:|--------:|------:|----------:|--------:|--------:|-------:|
 |     2_1 |     1.1 |     0 |    0.8728 |  0.8806 |  0.865  | 0.8719 |
@@ -97,6 +101,7 @@ The five highest performing models were as follows:
 |     2_1 |     1   |     0 |    0.869  |  0.8806 |  0.8574 | 0.8677 |
 |     2_1 |     1.2 |     0 |    0.869  |  0.8806 |  0.8574 | 0.8677 |
 |     2_1 |     0.9 |     0 |    0.8644 |  0.8714 |  0.8574 | 0.8635 |
+</p>
 
 This suggested the optimum model had architecture '2_1', learning rate 1.1 and without any regularisation term'.
 
@@ -104,20 +109,17 @@ This suggested the optimum model had architecture '2_1', learning rate 1.1 and w
 
 We then trained this optimum model on the whole training/validation set (i.e. pooling all 4 CV folds) and evaluated its performance on the test set by the same metrics:
 
+<p align="center">
 | dataset |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |:--------|--------:|--------:|------:|----------:|--------:|--------:|-------:|
 | test    |     2_1 |     2.1 |     0 |    0.8054 |  0.9333 |  0.6774 | 0.8033 |
-
-[Note there is a drop in performance relative to the CV results.
-could note that sens is higher but spec is lower]
+</p>
 
 Plotting the ROC curve using the range of available thresholds:
 
 <p align="center">
 <img src="../docs/cleveland/test_roc.png" alt="Correlation matrix" width="600"/>
 </p>
-
-[some comment on the roc?]
 
 ## Discussion
 
@@ -146,9 +148,11 @@ Features 'ca' and 'thal' (blood vessels and thallium scan) have four and two mis
 #### Ground truth labels
 The dataset's documentation is somewhat ambiguous regarding the ground-truth labelling with/without heart disease. It states that value 0 represents < 50% vessel diameter narrowing, while value 1 represents > 50% diameter narrowing; however, additional values are found in this column with the following frequencies:
 
+<p align="center">
 | Value     | 0   | 1  | 2  | 3  | 4  |
 |-----------|-----|----|----|----|----|
 | Frequency | 164 | 55 | 36 | 35 | 13 |
+</p>>
 
 In the absence of expert opinion, we have assumed categories 2-4 also represent disease states, as others have previously (e.g. https://gallery.azure.ai/Experiment/Heart-Disease-Prediction-5), yielding 164 ‘no disease’ cases and 139 ‘disease’ cases. While there is a relatively small imbalance in the samples for each class, this inequality should not affect the accuracies of these tests since the absolute number for each class is large.
 

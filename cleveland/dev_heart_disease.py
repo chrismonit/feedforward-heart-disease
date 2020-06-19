@@ -4,6 +4,7 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn import metrics
+import matplotlib.pyplot as plt
 
 from cleveland import preproc
 from ml.models import NetBin
@@ -13,7 +14,7 @@ pd.options.display.width = 0  # adjust according to terminal width
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))  # assuming this file in <proj_root>/src/<package>
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 OUT_DIR = os.path.join(ROOT_DIR, "out")
-DEC = 3
+DEC = 4
 
 LABEL = 'disease'
 DROP_FIRST = False  # for assigning dummy variables using pandas method
@@ -164,7 +165,7 @@ def hp_search(X_train_val, y_train_val):
                         val_results.to_csv(val_file, mode='a', header=False, index=False)
 
 
-def test(X_train, X_test, y_train, y_test):
+def run_test(X_train, X_test, y_train, y_test):
     print("Testing")
     X_train_scaled, X_train_means, X_train_stds = standardise(X_train)
     X_test_scaled = (X_test - X_train_means).div(X_train_stds + EPSILON)  # avoid zero div problem
@@ -185,10 +186,26 @@ def test(X_train, X_test, y_train, y_test):
     test_df = test_df.append(test_perf, ignore_index=True)
     print(f"Training set cost={cost}")
     print(test_df)
+    print(test_df[['dataset', 'arch.', 'alpha', 'reg', 'roc_auc', 'sens.', 'spec.', 'acc.']].round(DEC)
+          .to_markdown(showindex=False))
     # test_df.to_csv(os.path.join(OUT_DIR, "test_results.csv"), index=False)
+
+    # ROC curve
+    pred_scores = model.predict_scores(X_test_scaled)
+    fpr, tpr, thresholds = metrics.roc_curve(y_test.squeeze(), pred_scores.squeeze())
+    fig, ax = plt.subplots()
+    ax.plot(fpr, tpr, color='r')
+    ax.plot([0, 1], [0, 1], color='navy', linestyle='--')
+    ax.set_aspect('equal', 'box')
+    ax.set_xlim([0, 1])
+    ax.set_ylim([0, 1])
+    ax.set_xlabel("False positive rate")
+    ax.set_ylabel("True positive rate")
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == '__main__':
     X_train_val, X_test, y_train_val, y_test = get_train_test()
     # hp_search(X_train_val, y_train_val)
-    test(X_train_val, X_test, y_train_val, y_test)
+    run_test(X_train_val, X_test, y_train_val, y_test)

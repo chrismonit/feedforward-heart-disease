@@ -162,11 +162,15 @@ class NetBin:
                 # print(f"bias_derivs={bias_derivs}")
         return cost
 
-    def predict(self, X):  # TODO same logic as forward pass, can we combine these?
+    def predict_scores(self, X):
         A = X.copy()
         for l in range(1, len(self.layers)):
             Z = np.dot(self.weights[l], A) + self.biases[l]
             A = self.activation_functions[l](Z)
+        return A
+
+    def predict(self, X):  # TODO same logic as forward pass, can we combine these?
+        A = self.predict_scores(X)
         y_pred = [int(a > self.predict_thresh) for a in A.squeeze()]
         return y_pred
 

@@ -4,7 +4,7 @@ Christopher Monit
 
 Summer 2020
 
-_I have wanted to explore the predictive capability of simple artificial neural networks, having taken the introductory <a id="coursera" href="https://www.coursera.org/specializations/deep-learning">Coursera Deep Learning specialisation</a>. Here I have implemented my own binary classification networks from scratch for a short research project. The following report summarises the dataset studied, models evaluated and concludes with some discussion points on how this could be improved upon._
+_I have wanted to explore the predictive capability of simple artificial neural networks, having taken the <a id="coursera" href="https://www.coursera.org/specializations/deep-learning">Coursera Deep Learning specialisation</a>. Here I have implemented my own binary classification networks from scratch for a short research project. The following report summarises the dataset studied, models evaluated and concludes with some discussion points on how this could be improved upon._
 
 ## Background
 Coronary heart disease (CHD) affects 2.3 million people and is responsible for 64,000 deaths annually in the UK (<a id="bhf" href="https://www.bhf.org.uk/what-we-do/our-research/heart-statistics">British Heart Foundation</a>). It is caused by aggregation of fatty deposits in the coronary arteries and normally diagnosed by electrocardiogram or chest x-ray, but using machine learning it may be possible to accurately identify CHD from indirect measurements such as blood tests and patient reported symptoms, saving time and costs.
@@ -14,9 +14,8 @@ Here we investigate the predictive potential of shallow neural networks in ident
 ## Results
 ### Investigating features
 
-Firstly, we investigate whether there is discriminatory signal in these variables. 
+The data comprise six quantitative (or ordinal) and seven categorical features, defined in the table below. Firstly, we investigate whether there is discriminatory signal in these variables which might inform a classification model. Visualising the features by presence/absence of CHD reveals clearly distinct distributions for some but not all measurements:
 
-Visualising the features by presence/absence of CHD reveals clearly distinct distributions for some but not all measurements:
 <p align="center">
 <img src="../docs/cleveland/categoricals_plot.png" alt="Continuous variable distributions" width="600"/>
 </p>
@@ -24,7 +23,7 @@ Visualising the features by presence/absence of CHD reveals clearly distinct dis
 <img src="../docs/cleveland/quantitatives_plot.png" alt="Continuous variable distributions" width="600"/>
 </p>
 
-But are these differences statistically significant? We applied the two-sided Mann-Whitney U test for the six quantitative features, as this is a nonparametric test that requires no assumption about the underlying distributions, while for the seven categorical variables we apply Pearson's chi squared test. We reject the null hypothesis of identical distributions if p < 0.05. With 13 features to investigate, performing multiple hypothesis tests increases the danger of type 1 error and therefore adjust the resulting *p* values using the Bonferroni correction (arguably the most conservative of correction procedures) and retain the 0.05 threshold (values to 5 decimal places):
+But are these differences statistically significant? We applied the two-sided Mann-Whitney U test for the six quantitative features, as this is a nonparametric test that requires no assumption about the underlying distributions, while for the seven categorical variables we apply Pearson's chi squared test. We reject the null hypothesis of identical distributions if _p_ < 0.05. With 13 features to investigate, performing multiple hypothesis tests increases the danger of type 1 error and therefore adjust the resulting _p_ values using the Bonferroni correction (arguably the most conservative of correction procedures) and retain the 0.05 threshold (values to 5 decimal places):
 
 | feature   | description                           | test   |   statistic |       p |   p_bon | p_bon < 0.05   |
 |:----------|:--------------------------------------|:-------|------------:|--------:|--------:|:---------------|
@@ -42,7 +41,7 @@ But are these differences statistically significant? We applied the two-sided Ma
 | slope     | Slope of the peak exercise ST segment | chi2   |     45.7846 | 0       | 0       | Yes            |
 | thal      | Thallium scan result                  | chi2   |     82.6846 | 0       | 0       | Yes            |
 
-We concluded there is significant discriminatory signal among some features which may be useful for CHD classification.
+We concluded there is significant discriminatory signal among the majority of features which may be useful for CHD classification.
 
 Computing Kendall's rank correlation coefficient between features (with categorical features transformed to quantative using one hot encoding), showed there is not an overwhelmingly strong correlation between any of the features:
 
@@ -50,17 +49,14 @@ Computing Kendall's rank correlation coefficient between features (with categori
 <img src="../docs/cleveland/corr_mat_kendall.png" alt="Correlation matrix" width="600"/>
 </p>
 
-### Classification models
+### Binary classification neural network models
 
-aimed to make a classifier, binary classification task
-NB using all features
-Define notation for architectures, make clear tanh used
 #### Models
-Simple, fully connected architectures with units in hidden layers using hyperbolic tangent activation functions and the final output layer comprising a single sigmoid function unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to 2 hidden layers, comprising up to 16 units each. Weight and bias parameters were determined by 10,000 iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with a range of regularisation parameter (lambda) values. 
+Simple, fully connected architectures with units in hidden layers using hyperbolic tangent ('tanh') activation functions and the final output layer comprising a single sigmoid function unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to 2 hidden layers, comprising up to 16 units each. We use the notation 'n_m_1' to represent a network with two hidden layers comprising n and m units respectively, with a single sigmoid output unit. Weight and bias parameters were determined by 10,000 iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with a range of regularisation parameter (lambda) values. 
 
 #### Model training and validation
 
-20% of the total dataset was uniformly randomly subsampled, preserving the proportions of CHD and non-CHD cases, and reserved as a test set. The remaining 80% was used for hyperparameter tuning using 4-fold cross validation, by uniformly randomly subsampling 4 non-overlapping validation sets and for each of these using the remaining 3 folds for training each model, before measuring the models' performances on the given validation set. Proportions of CHD and non-CHD cases were preserved amongst folds. Area under the ROC curve (AUC) was chosen as a performance metric to compare models, as this summarises the compromise between a model's sensitivity and specificity. For each experimental condition the mean AUC was calculated across the 4 validation folds.
+All 13 features were used, with categorical features transformed into multiple binary features using one hot encoding (see methods). 20% of the total dataset was uniformly randomly subsampled, preserving the proportions of CHD and non-CHD cases, and reserved as a test set. The remaining 80% was used for hyperparameter tuning using 4-fold cross validation, by uniformly randomly subsampling 4 non-overlapping validation sets and for each of these using the remaining 3 folds for training each model, before measuring the models' performances on the given validation set. Proportions of CHD and non-CHD cases were preserved amongst folds. Area under the ROC curve (AUC) was chosen as a performance metric to compare models, as this summarises the compromise between a model's sensitivity and specificity. For each experimental condition the mean AUC was calculated across the 4 validation folds.
 
 The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, with over a range of hyperparameter values:
 

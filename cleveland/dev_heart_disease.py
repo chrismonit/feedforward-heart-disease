@@ -76,7 +76,7 @@ def split_folds(X, y, standardise_data=True, **kwargs):
         folds_y_train.append(y.iloc[train_index])
         folds_y_val.append(y.iloc[val_index])
 
-    if standardise_data:
+    if standardise_data:  # TODO better to move to independent function
         for i in range(kf.get_n_splits()):
             X_train_scaled, X_train_means, X_train_stds = standardise(folds_X_train[i])
             X_val_scaled = (folds_X_val[i] - X_train_means).div(X_train_stds + EPSILON)  # avoid zero div problem
@@ -106,6 +106,7 @@ def get_train_test():
 
 
 def hp_search(X_train_val, y_train_val):
+    print("Hyper parameter search")
     n_folds = 4
     folds_X_train, folds_X_val, folds_y_train, folds_y_val = split_folds(X_train_val, y_train_val,
                                                                          standardise_data=True, n_splits=n_folds,
@@ -162,10 +163,32 @@ def hp_search(X_train_val, y_train_val):
                         train_results.to_csv(train_file, mode='a', header=False, index=False)
                         val_results.to_csv(val_file, mode='a', header=False, index=False)
 
-    # TODO evaluate on test set, preferably in different function
+
+def test(X_train, X_test, y_train, y_test):
+    print("Testing")
+    X_train_scaled, X_train_means, X_train_stds = standardise(X_train)
+    X_test_scaled = (X_test - X_train_means).div(X_train_stds + EPSILON)  # avoid zero div problem
+    settings = dict(zip(['architecture', 'reg_param', 'weight_scale', 'alpha', 'n_iter', 'print_freq'],
+                        [[2], 0, 0.01, 2.1, 1e4, 0.0005]))
+
+    X_train_scaled = X_train_scaled.T
+    X_test_scaled = X_test_scaled.T
+    y_train = y_train.to_frame().T
+    y_test = y_test.to_frame().T  # TODO refactor to combine with reshape_folds, above
+
+    shared_cols = ['fold', 'dataset', 'arch.', 'init', 'alpha', 'n_iter', 'reg',
+                   'roc_auc', 'sens.', 'spec.', 'acc.', 'tn', 'fp', 'fn', 'tp']
+    test_df = pd.DataFrame(columns=shared_cols)
+    np.random.seed(10)
+    model, cost, train_perf, test_perf = experiment(X_train_scaled, y_train, X_test_scaled, y_test, **settings)
+    test_df = test_df.append(train_perf, ignore_index=True)
+    test_df = test_df.append(test_perf, ignore_index=True)
+    print(f"Training set cost={cost}")
+    print(test_df)
+    # test_df.to_csv(os.path.join(OUT_DIR, "test_results.csv"), index=False)
 
 
 if __name__ == '__main__':
-    # tmp_kfolds_example()
     X_train_val, X_test, y_train_val, y_test = get_train_test()
-    hp_search(X_train_val, y_train_val)
+    # hp_search(X_train_val, y_train_val)
+    test(X_train_val, X_test, y_train_val, y_test)

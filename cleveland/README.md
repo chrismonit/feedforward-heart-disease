@@ -63,19 +63,17 @@ The figures below summarise the influence of hyperparameters on mean ROC AUC fro
 <div align="center">
     <img src="../docs/cleveland/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
 </div>
-<div></div>
-<div align="center">
+<p align="center">
     Hyperparameter grid search, mean AUC on cross validation training datasets. 
-</div>
+</p>
 
 
 <div align="center">
     <img src="../docs/cleveland/coarse_val_mean_auc.png" alt="Correlation matrix" width="600"/>
 </div>
-<div></div>
-<div align="center">
+<p align="center">
     Hyperparameter grid search, mean AUC on cross validation validation datasets. 
-</div>
+</p>
 
 While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets for most models. However, several of the models comprising two hidden layers have failed to learn, in particular with lower learning rates. This same grid search was attempted using ReLU activation functions for units in each hidden layer, but these had poorer performance outcomes (data not shown). 
 

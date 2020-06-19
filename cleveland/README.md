@@ -61,21 +61,24 @@ All 13 features were used, with categorical features transformed into multiple b
 The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, over a range of hyperparameter values:
 
 <div align="center">
-<img src="../docs/cleveland/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
-Hyperparameter grid search, mean AUC on cross validation training datasets. 
+    <img src="../docs/cleveland/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
+</div>
+<div align="center">
+    Hyperparameter grid search, mean AUC on cross validation training datasets. 
 </div>
 
 
 <div align="center">
-<img src="../docs/cleveland/coarse_val_mean_auc.png" alt="Correlation matrix" width="600"/>
-Hyperparameter grid search, mean AUC on cross validation validation datasets. 
+    <img src="../docs/cleveland/coarse_val_mean_auc.png" alt="Correlation matrix" width="600"/>
+</div>
+<div align="center">
+    Hyperparameter grid search, mean AUC on cross validation validation datasets. 
 </div>
 
 While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets for most models. However, several of the models comprising two hidden layers have failed to learn, in particular with lower learning rates. This same grid search was attempted using ReLU activation functions for units in each hidden layer, but these had poorer performance outcomes (data not shown). 
 
 Performance metrics of the five (tanh-activation) models with highest ROC AUC are shown below:
 
-<div align="center">
 |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |--------:|--------:|------:|----------:|--------:|--------:|-------:|
 |     2_1 |     1   |   0   |    0.869  |  0.8806 |  0.8574 | 0.8677 |
@@ -83,7 +86,6 @@ Performance metrics of the five (tanh-activation) models with highest ROC AUC ar
 |     2_1 |     0.5 |   0   |    0.8596 |  0.8621 |  0.8572 | 0.8593 |
 |   2_2_1 |     0.1 |   0   |    0.8513 |  0.8528 |  0.8498 | 0.851  |
 |   2_4_1 |     0.1 |   0.5 |    0.8486 |  0.8251 |  0.8721 | 0.851  |
-</div>
 
 We then pursued a finer grid search over a narrower range of values in this high-performing region of the hyperparameter space, and measured model performance as before:
 
@@ -93,7 +95,6 @@ We then pursued a finer grid search over a narrower range of values in this high
 
 The five highest performing models were as follows: 
 
-<div align="center">
 |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |--------:|--------:|------:|----------:|--------:|--------:|-------:|
 |     2_1 |     1.1 |     0 |    0.8728 |  0.8806 |  0.865  | 0.8719 |
@@ -101,7 +102,6 @@ The five highest performing models were as follows:
 |     2_1 |     1   |     0 |    0.869  |  0.8806 |  0.8574 | 0.8677 |
 |     2_1 |     1.2 |     0 |    0.869  |  0.8806 |  0.8574 | 0.8677 |
 |     2_1 |     0.9 |     0 |    0.8644 |  0.8714 |  0.8574 | 0.8635 |
-</div>
 
 This suggested the optimum model had architecture '2_1', learning rate 1.1 and without any regularisation term'.
 
@@ -109,16 +109,14 @@ This suggested the optimum model had architecture '2_1', learning rate 1.1 and w
 
 We then trained this optimum model on the whole training/validation set (i.e. pooling all 4 CV folds) and evaluated its performance on the test set by the same metrics:
 
-<div align="center">
 | dataset |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |:--------|--------:|--------:|------:|----------:|--------:|--------:|-------:|
 | test    |     2_1 |     2.1 |     0 |    0.8054 |  0.9333 |  0.6774 | 0.8033 |
-</div>
 
 Plotting the ROC curve using the range of available thresholds:
 
 <div align="center">
-<img src="../docs/cleveland/test_roc.png" alt="Correlation matrix" width="600"/>
+    <img src="../docs/cleveland/test_roc.png" alt="Correlation matrix" width="600"/>
 </div>
 
 ## Discussion
@@ -148,11 +146,9 @@ Features 'ca' and 'thal' (blood vessels and thallium scan) have four and two mis
 #### Ground truth labels
 The dataset's documentation is somewhat ambiguous regarding the ground-truth labelling with/without heart disease. It states that value 0 represents < 50% vessel diameter narrowing, while value 1 represents > 50% diameter narrowing; however, additional values are found in this column with the following frequencies:
 
-<div align="center">
 | Value     | 0   | 1  | 2  | 3  | 4  |
 |-----------|-----|----|----|----|----|
 | Frequency | 164 | 55 | 36 | 35 | 13 |
-</div>>
 
 In the absence of expert opinion, we have assumed categories 2-4 also represent disease states, as others have previously (e.g. https://gallery.azure.ai/Experiment/Heart-Disease-Prediction-5), yielding 164 ‘no disease’ cases and 139 ‘disease’ cases. While there is a relatively small imbalance in the samples for each class, this inequality should not affect the accuracies of these tests since the absolute number for each class is large.
 

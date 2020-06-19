@@ -4,17 +4,17 @@ Christopher Monit
 
 Summer 2020
 
-## Introduction
+_I have wanted to explore the predictive capability of simple artificial neural networks, having taken the introductory <a id="coursera" href="https://www.coursera.org/specializations/deep-learning">Coursera Deep Learning specialisation</a>. Here I have implemented my own binary classification networks from scratch for a short research project. The following report summarises the dataset studied, models evaluated and concludes with some discussion points on how this could be improved upon._
+
+## Background
 Coronary heart disease (CHD) affects 2.3 million people and is responsible for 64,000 deaths annually in the UK (<a id="bhf" href="https://www.bhf.org.uk/what-we-do/our-research/heart-statistics">British Heart Foundation</a>). It is caused by aggregation of fatty deposits in the coronary arteries and normally diagnosed by electrocardiogram or chest x-ray, but using machine learning it may be possible to accurately identify CHD from indirect measurements such as blood tests and patient reported symptoms, saving time and costs.
 
-Here we investigate the predictive potential of shallow neural networks in identifying CHD from the commonly studied <a id="bhf" href="https://archive.ics.uci.edu/ml/datasets/Heart+Disease">Cleveland dataset</a>, comprising 303 records of 13 measurements together with a ground truth labels indicating 'CHD' or 'no CHD'.
+Here we investigate the predictive potential of shallow neural networks in identifying CHD from the commonly studied <a id="bhf" href="https://archive.ics.uci.edu/ml/datasets/Heart+Disease">Cleveland dataset</a>, comprising 13 measurements from 303 patients, together with a ground truth labels indicating 'CHD' (139 patients) or 'no CHD' (164 patients). Therefore we approach CHD diagnosis as a binary classification problem.
 
 ## Results
 ### Investigating features
-[Comment somewhere that the classes are approximately balanced, could show the table I had in earlier report]
 
 Firstly, we investigate whether there is discriminatory signal in these variables. 
-
 
 Visualising the features by presence/absence of CHD reveals clearly distinct distributions for some but not all measurements:
 <p align="center">
@@ -56,13 +56,13 @@ aimed to make a classifier, binary classification task
 NB using all features
 Define notation for architectures, make clear tanh used
 #### Models
-Simple, fully connected architectures with units in hidden layers using hyperbolic tangent activation functions and the final output layer comprising a single sigmoid function unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to [N] hidden layers, comprising [M] units. Weight and bias parameters were determined by [TBC] iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with regularisation parameter (lambda) values ranging from [TBC]. 
+Simple, fully connected architectures with units in hidden layers using hyperbolic tangent activation functions and the final output layer comprising a single sigmoid function unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to 2 hidden layers, comprising up to 16 units each. Weight and bias parameters were determined by 10,000 iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with a range of regularisation parameter (lambda) values. 
 
 #### Model training and validation
 
-20% of the total dataset was uniformly randomly subsampled, preserving the proportions of CHD and non-CHD cases, and reserved as a test set. The remaining 80% was used for hyperparameter tuning using 4-fold cross validation, by uniformly randomly subsampling 4 non-overlapping validation sets and for each of these using the remaining 3 folds for training each model, before measuring the models' performances on the given validation set [mention whether stratified or not]. Area under the ROC curve (AUC) was chosen as a performance metric to compare models, as this summarises the compromise between a model's sensitivity and specificity. For each experimental condition the mean AUC was calculated across the 4 validation folds.
+20% of the total dataset was uniformly randomly subsampled, preserving the proportions of CHD and non-CHD cases, and reserved as a test set. The remaining 80% was used for hyperparameter tuning using 4-fold cross validation, by uniformly randomly subsampling 4 non-overlapping validation sets and for each of these using the remaining 3 folds for training each model, before measuring the models' performances on the given validation set. Proportions of CHD and non-CHD cases were preserved amongst folds. Area under the ROC curve (AUC) was chosen as a performance metric to compare models, as this summarises the compromise between a model's sensitivity and specificity. For each experimental condition the mean AUC was calculated across the 4 validation folds.
 
-The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, with an arbitrarily selected grid search over hyperparameter values:
+The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, with over a range of hyperparameter values:
 
 <p align="center">
 <img src="../docs/cleveland/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
@@ -74,7 +74,9 @@ Hyperparameter grid search, mean AUC on cross validation training datasets.
 </p>
 Hyperparameter grid search, mean AUC on cross validation validation datasets. 
 
-While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets for most models. Performance metrics of the five models with highest ROC AUC are shown below:  [comment some models have failed to train]
+While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets for most models. However, several of the models two two hidden layers have failed to learn, in particularly with the lowest learning rate. This same grid search was attempted using ReLu activation functions for units in each hidden layer, but these had poorer performance outcomes (data not shown). 
+
+Performance metrics of the five (tanh-activation) models with highest ROC AUC are shown below:
 
 |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |--------:|--------:|------:|----------:|--------:|--------:|-------:|
@@ -104,35 +106,41 @@ This suggested the optimum model had architecture '2_1', learning rate 1.1 and w
 
 #### Test set performance
 
-We then trained model [X] on the whole training/validation set (i.e. pooling all 4 CV folds).
+We then trained this optimum model on the whole training/validation set (i.e. pooling all 4 CV folds) and evaluated its performance on the test set by the same metrics:
 
+| dataset |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
+|:--------|--------:|--------:|------:|----------:|--------:|--------:|-------:|
+| test    |     2_1 |     2.1 |     0 |    0.8054 |  0.9333 |  0.6774 | 0.8033 |
 
+[Note there is a drop in performance relative to the CV results.
+could note that sens is higher but spec is lower]
 
-[show performance of best model on test set, single row table of performance stats]
+Plotting the ROC curve using the range of available thresholds:
 
-[ROC curve for the best model, I guess on the test set]
+<p align="center">
+<img src="../docs/cleveland/test_roc.png" alt="Correlation matrix" width="600"/>
+</p>
 
+[some comment on the roc?]
 
 ## Discussion
-limitations? I haven't worked out how much performance is beneficial, so not clear if this is good enough.
-could have done more feature engineering? would help to give an example of what to do though
-these are impressive, better than kaggle competition winners?
 
-Several implementation strategies could have improved training and allowed more efficient model development. Here we have applied a standard, batch gradient descent algorithm to learn weight and bias parameters but there may have been benefit from applying stochastic (mini-batch) gradient descent, where updates to parameters are determined using random smaller subsets of the data at a time. Additional augmented search algorithms such as Adam (adaptive momentum estimation), which help maintain efficient training despite the stochastic exposure to training examples, may have had further benefit. 
+In this project, we have investigated the capability of several simple neural networks to correctly classify patients as suffering from CHD, based on a range of indirect measurements. 
 
-learning rate decay
-activation functions - testing this now anyway
-perturbing values if not changing much
-would be better to have more flexible definition of optimisation end time
+The most promising model on the basis of cross validation experiments proved to be a network with a single hidden layer, trained with a relatively high learning rate and without regularisation. Training this model with the whole training set and evaluating performance on unseen data yielded a high AUC, suggesting performance could generalise well to unseen data. However, the balance between sensitivity and specificity was considerably different from the values seen in the CV experiments, having more impressive sensitivity at the cost of lower specificity. A limitation of the project as a whole is the uncertainty surrounding the performance levels required in practice for the model to be useful, since this is a toy problem.
 
-if results say reg didn't work well, could say we should have tried dropout or something
+Almost all models showed considerable overfitting of the training set and Frobenius-norm regularisation provided minimal benefit to the top performing models. It is possible that other regularisation techniques could allow the more complex models to increase their CV performance, such as dropout regularisation. 
+
+Several implementation strategies could have improved training and allowed more efficient model development. Here we have applied a standard, batch gradient descent algorithm to learn weight and bias parameters but there may have been benefit from applying stochastic (mini-batch) gradient descent, where updates to parameters are determined using random, smaller subsets of the data at a time. Additional augmented search algorithms such as Adam (adaptive momentum estimation), which help maintain efficient training despite the stochastic exposure to training examples, may have had further benefit in this scenario.
+
+However, even more straightforward changes may have improved efficiency. During hyperparameter tuning, we applied a single learning rate for each model being trained, but allowing the learning rate to decrease as a function of gradient descent iterations may have improved exploration of the parameter space close to the cost function's global minimum. Secondly, since several relatively simple models hardly improved performance at all during training, which may have been due to unfavorable initial parameter values, it may have been beneficial to randomly resample initial parameter values after a given number of gradient descent iterations if little change in the cost was observed. Indeed the number of gradient descent iterations used (10,000) was arbitrary and a more sensible approach may be to define the stopping point flexibly, for example by measuring change in the cost and terminating training once further improvement was unlikely.
 
 ## Methods
 
 ### Implementation and model experiments
 All source code can be found in this repository. Models and optimisation algorithms have been implemented from scratch in pure Python, using standard numerical libraries, namely numpy, pandas and sci-kit learn.
 
-Initial weight parameters were sampled from a standard normal distribution [define distribution], ranging from 10^-3 to 1.1; bias parameters were all initialised as 0.
+Initial weight parameters were sampled from a normal distribution with mean 0 and standard deviation 0.01; bias parameters were all initialised as 0.
 
 ### Data Preprocessing
 
@@ -153,9 +161,6 @@ Seven of the 13 variables are categorical or binary, and therefore not directly 
 
 #### Standardising values
 Models reliant on large numbers of linear operations, including neural networks, are vulnerable to overly conditioning predictions based on the magnitude or range of some features; but this can be avoided by transforming input features and enforcing a consistent distribution. Following one hot encoding of categorical variables, we scaled training cases such that each feature had mean equal to 0 and variance equal to 1. Each fold's validation set and the test set were transformed by the same procedure as corresponding training data. 
-
-
-Could have a note about code tests used. This could be a report about implementation as much as results
 
 ## References
 <a id="1">[1]</a> 

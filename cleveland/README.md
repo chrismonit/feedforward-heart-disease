@@ -11,7 +11,7 @@ Here we investigate the predictive potential of shallow neural networks in ident
 
 ## Results
 ### Investigating features
-[Comment somewhere that the classes are approximately balanced]
+[Comment somewhere that the classes are approximately balanced, could show the table I had in earlier report]
 
 Firstly, we investigate whether there is discriminatory signal in these variables. 
 
@@ -64,11 +64,17 @@ Simple, fully connected architectures with units in hidden layers using hyperbol
 
 The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, with an arbitrarily selected grid search over hyperparameter values:
 
-[Coarse grain hp, training]
+<p align="center">
+<img src="../docs/cleveland/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
+</p>
+Hyperparameter grid search, mean AUC on cross validation training datasets. 
 
-[Coarse grain hp, val]
+<p align="center">
+<img src="../docs/cleveland/coarse_val_mean_auc.png" alt="Correlation matrix" width="600"/>
+</p>
+Hyperparameter grid search, mean AUC on cross validation validation datasets. 
 
-While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets. Performance metrics of the five models with highest ROC AUC are shown below:
+While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets for most models. Performance metrics of the five models with highest ROC AUC are shown below:  [comment some models have failed to train]
 
 |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |--------:|--------:|------:|----------:|--------:|--------:|-------:|
@@ -79,11 +85,12 @@ While there is considerable overfitting to the training sets, nonetheless there 
 |   2_4_1 |     0.1 |   0.5 |    0.8486 |  0.8251 |  0.8721 | 0.851  |
 
 We then pursued a finer grid search over a narrower range of values in this high-performing region of the hyperparameter space, and measured model performance as before:
-architectures = [[2], [2, 2]]
-reg_params = [0, 0.1, 0.2, 0.3]
-w_inits = [0.01]
-n_iters = [1e4]
-alphas = [0.8, 0.9, 1, 1.1, 1.2]
+
+<p align="center">
+<img src="../docs/cleveland/fine_val_mean_auc.png" alt="Correlation matrix" width="600"/>
+</p>
+
+The five highest performing models were as follows: 
 
 |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |--------:|--------:|------:|----------:|--------:|--------:|-------:|
@@ -93,14 +100,17 @@ alphas = [0.8, 0.9, 1, 1.1, 1.2]
 |     2_1 |     1.2 |     0 |    0.869  |  0.8806 |  0.8574 | 0.8677 |
 |     2_1 |     0.9 |     0 |    0.8644 |  0.8714 |  0.8574 | 0.8635 |
 
-This suggested the best performing model was [X].
+This suggested the optimum model had architecture '2_1', learning rate 1.1 and without any regularisation term'.
 
 #### Test set performance
 
 We then trained model [X] on the whole training/validation set (i.e. pooling all 4 CV folds).
 
-show performance of best model on test set
-ROC curve for the best model, I guess on the test set
+
+
+[show performance of best model on test set, single row table of performance stats]
+
+[ROC curve for the best model, I guess on the test set]
 
 
 ## Discussion

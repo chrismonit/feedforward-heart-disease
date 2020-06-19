@@ -95,15 +95,17 @@ def reshape_folds(folds_X_train, folds_X_val, folds_y_train, folds_y_val):
     return folds_X_train, folds_X_val, folds_y_train, folds_y_val
 
 
-def hp_search():
-    # TODO move this outside of this function, ie could supply only the train/val dataset for hp search
+def get_train_test():
     data = preproc.from_file_with_dummies(os.path.join(DATA_DIR, FILE_PATH), DROP_FIRST)
     labels = data[LABEL]
     measurements = data.drop(LABEL, axis=1)
     np.random.seed(10)
     # Split into CV and test sets
     X_train_val, X_test, y_train_val, y_test = train_test_split(measurements, labels, test_size=0.2)
+    return X_train_val, X_test, y_train_val, y_test
 
+
+def hp_search(X_train_val, y_train_val):
     n_folds = 4
     folds_X_train, folds_X_val, folds_y_train, folds_y_val = split_folds(X_train_val, y_train_val,
                                                                          standardise_data=True, n_splits=n_folds,
@@ -160,7 +162,10 @@ def hp_search():
                         train_results.to_csv(train_file, mode='a', header=False, index=False)
                         val_results.to_csv(val_file, mode='a', header=False, index=False)
 
+    # TODO evaluate on test set, preferably in different function
+
 
 if __name__ == '__main__':
     # tmp_kfolds_example()
-    hp_search()
+    X_train_val, X_test, y_train_val, y_test = get_train_test()
+    hp_search(X_train_val, y_train_val)

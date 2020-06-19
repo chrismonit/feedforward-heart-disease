@@ -11,6 +11,8 @@ Here we investigate the predictive potential of shallow neural networks in ident
 
 ## Results
 ### Investigating features
+[Comment somewhere that the classes are approximately balanced]
+
 Firstly, we investigate whether there is discriminatory signal in these variables. 
 
 
@@ -49,32 +51,78 @@ Computing Kendall's rank correlation coefficient between features (with categori
 </p>
 
 ### Classification models
+
 aimed to make a classifier, binary classification task
 NB using all features
-Simple architectures with units in hidden layers using hyperbolic tangent activation functions and the final output layer comprising a single sigmoid function unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to two hidden layers, each comprising two units. Weight and bias parameters were determined by 10^4 iterations of standard gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to the training set, with regularisation parameter (lambda) values ranging from 0 to 10. The data were split 3:1 into training and test sets, by randomly sampled and preserving the proportions of CHD and non-CHD cases. Candidate models were assessed by the ROC area under the curve (AUC) on the test set.
+Define notation for architectures, make clear tanh used
+#### Models
+Simple, fully connected architectures with units in hidden layers using hyperbolic tangent activation functions and the final output layer comprising a single sigmoid function unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to [N] hidden layers, comprising [M] units. Weight and bias parameters were determined by [TBC] iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with regularisation parameter (lambda) values ranging from [TBC]. 
 
-Summarise the distribution of performances? Violin plot or something?
+#### Model training and validation
 
-The following table summarises the performance of the top AUC model:
+20% of the total dataset was uniformly randomly subsampled, preserving the proportions of CHD and non-CHD cases, and reserved as a test set. The remaining 80% was used for hyperparameter tuning using 4-fold cross validation, by uniformly randomly subsampling 4 non-overlapping validation sets and for each of these using the remaining 3 folds for training each model, before measuring the models' performances on the given validation set [mention whether stratified or not]. Area under the ROC curve (AUC) was chosen as a performance metric to compare models, as this summarises the compromise between a model's sensitivity and specificity. For each experimental condition the mean AUC was calculated across the 4 validation folds.
 
-| layers | weight scaling | alpha | iterations   | lambda | AUC    | sens. | spec. | acc.  | TN | FP | FN | TP |
-|--------|----------------|-------|--------------|--------|--------|-------|-------|-------|----|----|----|----|
-| 2_2_1  | 1.100          | 0.2   | 10000        | 2      | 0.908  | 0.921 | 0.895 | 0.908 | 34 | 4  | 3  | 35 |
+The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, with an arbitrarily selected grid search over hyperparameter values:
 
-ROC 
+[Coarse grain hp, training]
 
-## Conclusions
+[Coarse grain hp, val]
+
+While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets. Performance metrics of the five models with highest ROC AUC are shown below:
+
+|   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
+|--------:|--------:|------:|----------:|--------:|--------:|-------:|
+|     2_1 |     1   |   0   |    0.869  |  0.8806 |  0.8574 | 0.8677 |
+|   2_2_1 |     0.5 |   0   |    0.8613 |  0.8806 |  0.842  | 0.8593 |
+|     2_1 |     0.5 |   0   |    0.8596 |  0.8621 |  0.8572 | 0.8593 |
+|   2_2_1 |     0.1 |   0   |    0.8513 |  0.8528 |  0.8498 | 0.851  |
+|   2_4_1 |     0.1 |   0.5 |    0.8486 |  0.8251 |  0.8721 | 0.851  |
+
+We then pursued a finer grid search over a narrower range of values in this high-performing region of the hyperparameter space, and measured model performance as before:
+architectures = [[2], [2, 2]]
+reg_params = [0, 0.1, 0.2, 0.3]
+w_inits = [0.01]
+n_iters = [1e4]
+alphas = [0.8, 0.9, 1, 1.1, 1.2]
+
+|   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
+|--------:|--------:|------:|----------:|--------:|--------:|-------:|
+|     2_1 |     1.1 |     0 |    0.8728 |  0.8806 |  0.865  | 0.8719 |
+|   2_2_1 |     0.8 |     0 |    0.8697 |  0.8899 |  0.8496 | 0.8676 |
+|     2_1 |     1   |     0 |    0.869  |  0.8806 |  0.8574 | 0.8677 |
+|     2_1 |     1.2 |     0 |    0.869  |  0.8806 |  0.8574 | 0.8677 |
+|     2_1 |     0.9 |     0 |    0.8644 |  0.8714 |  0.8574 | 0.8635 |
+
+This suggested the best performing model was [X].
+
+#### Test set performance
+
+We then trained model [X] on the whole training/validation set (i.e. pooling all 4 CV folds).
+
+show performance of best model on test set
+ROC curve for the best model, I guess on the test set
+
+
+## Discussion
 limitations? I haven't worked out how much performance is beneficial, so not clear if this is good enough.
-could note that it would be preferable to have a separate purely test set
-could have done more feature engineering?
+could have done more feature engineering? would help to give an example of what to do though
 these are impressive, better than kaggle competition winners?
+
+Several implementation strategies could have improved training and allowed more efficient model development. Here we have applied a standard, batch gradient descent algorithm to learn weight and bias parameters but there may have been benefit from applying stochastic (mini-batch) gradient descent, where updates to parameters are determined using random smaller subsets of the data at a time. Additional augmented search algorithms such as Adam (adaptive momentum estimation), which help maintain efficient training despite the stochastic exposure to training examples, may have had further benefit. 
+
+learning rate decay
+activation functions - testing this now anyway
+perturbing values if not changing much
+would be better to have more flexible definition of optimisation end time
+
+if results say reg didn't work well, could say we should have tried dropout or something
 
 ## Methods
 
 ### Implementation and model experiments
-All source code can be found in this repository. Models and optimisation algorithms have been implemented from scratch in pure Python, using standard numerical libraries (e.g. numpy).
+All source code can be found in this repository. Models and optimisation algorithms have been implemented from scratch in pure Python, using standard numerical libraries, namely numpy, pandas and sci-kit learn.
 
-Initial weight parameters were sampled from a standard normal distribution and then multiplied by one of several scalars, ranging from 10^-3 to 1.1; bias parameters were all initialised as 0.
+Initial weight parameters were sampled from a standard normal distribution [define distribution], ranging from 10^-3 to 1.1; bias parameters were all initialised as 0.
 
 ### Data Preprocessing
 
@@ -91,9 +139,13 @@ The dataset's documentation is somewhat ambiguous regarding the ground-truth lab
 In the absence of expert opinion, we have assumed categories 2-4 also represent disease states, as others have previously (e.g. https://gallery.azure.ai/Experiment/Heart-Disease-Prediction-5), yielding 164 ‘no disease’ cases and 139 ‘disease’ cases. While there is a relatively small imbalance in the samples for each class, this inequality should not affect the accuracies of these tests since the absolute number for each class is large.
 
 #### Categorical variables
-One hot encoding
+Seven of the 13 variables are categorical or binary, and therefore not directly suitable for training by neural networks which expect input variables to be continuous. Therefore these seven features were transformed as dummy variables (so called 'one hot encoding') whereby a categorical feature comprising _N_ unique states is replaced with _N_ dummy features, each populated with 1 or 0 depending whether the state is present or absent.
 
 #### Standardising values
+Models reliant on large numbers of linear operations, including neural networks, are vulnerable to overly conditioning predictions based on the magnitude or range of some features; but this can be avoided by transforming input features and enforcing a consistent distribution. Following one hot encoding of categorical variables, we scaled training cases such that each feature had mean equal to 0 and variance equal to 1. Each fold's validation set and the test set were transformed by the same procedure as corresponding training data. 
+
+
+Could have a note about code tests used. This could be a report about implementation as much as results
 
 ## References
 <a id="1">[1]</a> 

@@ -77,7 +77,7 @@ The figures below summarise the influence of hyperparameters on mean ROC AUC fro
 
 While there is considerable overfitting to the training sets, nonetheless there is respectable performance on the validation sets for most models. However, several of the models comprising two hidden layers have failed to learn, in particular with lower learning rates. This same grid search was attempted using ReLU activation functions for units in each hidden layer, but these had poorer performance outcomes (data not shown). 
 
-Performance metrics of the five (tanh-activation) models with highest ROC AUC are shown below:
+Performance metrics of the five (tanh-activation) models with highest ROC AUC are shown below ('arch.', model architecture; 'alpha', learning rate; 'reg', regularisation parameter; 'roc_auc', area under the ROC curve; 'sens.', sensitivity, 'spec.', specificity', 'acc.', accuracy):
 
 |   arch. |   alpha |   reg |   roc_auc |   sens. |   spec. |   acc. |
 |--------:|--------:|------:|----------:|--------:|--------:|-------:|

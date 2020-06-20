@@ -19,7 +19,7 @@ DATA_DIR = os.path.join(ROOT_DIR, "data")
 OUT_DIR = os.path.join(ROOT_DIR, "out")
 DEC = 4
 
-LABEL = 'disease'
+LABEL = preproc.GROUND_TRUTH_LABEL
 DROP_FIRST = False  # for assigning dummy variables using pandas method
 FILE_PATH = "processed.cleveland.data.csv"
 EPSILON = 1e-9

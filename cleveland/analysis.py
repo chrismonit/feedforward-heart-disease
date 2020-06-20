@@ -14,7 +14,7 @@ DATA_DIR = os.path.join(ROOT_DIR, "data")
 OUT_DIR = os.path.join(ROOT_DIR, "out")
 DEC = 4
 
-FILE = "fine.val_results.csv"
+FILE = "fine.val_results.csv"  # TODO make softcoded
 
 
 # TODO separate into distinct functions for coarse and fine fine grain search results

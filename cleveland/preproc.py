@@ -5,7 +5,6 @@ Pre-processing of UCI heart disease dataset, to generate input for preliminary a
 import pandas as pd
 import numpy as np
 
-FILE = "processed.cleveland.data.csv"
 NAMES = ["age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach", "exang", "oldpeak", "slope", "ca",
          "thal", "num"]
 CATEGORICAL = ['sex', 'cp', 'fbs', 'restecg', 'exang', 'slope', 'thal']

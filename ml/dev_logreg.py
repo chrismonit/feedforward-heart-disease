@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.feature_selection import RFECV
 from sklearn.linear_model import LogisticRegression
 
-from cleveland.dev_heart_disease import performance
+from cleveland.dev import performance
 from ml.models import LogReg
 
 # TODO untested in this context

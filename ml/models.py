@@ -1,80 +1,22 @@
 import numpy as np
-import pandas as pd
 
 EPS = 1e-20
-# TODO regularisation? Class balancing?
 # TODO could check if this satisfies sci kit learn's api as a classifier
 
 
-class LogReg:
-    def __init__(self, num_features, w_init=None, b_init=None, predict_thresh=0.5):
-        self.w = w_init if w_init else np.zeros((num_features, 1))
-        self.b = b_init if b_init else 0
-        self.predict_thresh = predict_thresh
-
-    def _forward(self, X, y):
-        Z = (np.dot(self.w.T, X) + self.b)
-        A = self.sigmoid(Z)
-        cost = self.cross_entropy_cost(A, y)
-        return A, cost
-
-    @staticmethod
-    def _backward(A, X, y):
-        dz = A - y
-        dw = np.dot(X, dz.T) / len(y)  # dz = A - Y  # TODO warning, may need to be using y.shape[1] instead
-        # db = np.sum(dz) / len(y)
-        db = np.sum(dz, axis=1, keepdims=True) / len(y)  # TODO warning, may need to be using y.shape[1] instead
-        return dw, db
-
-    def _update(self, dw, db, learn_rate):
-        self.w = self.w - learn_rate * dw
-        self.b = self.b - learn_rate * db
-
-    # TODO could return cost values during fitting.
-    def fit(self, X, y, learn_rate, num_iterations, print_frequency=0.1):
-        y = np.expand_dims(y, 0)
-        for i in range(num_iterations):
-            A, cost = self._forward(X, y)
-            dw, db = self._backward(A, X, y)
-            self._update(dw, db, learn_rate)
-            if i % int(1. / print_frequency) == 0:
-                print(f"LogReg: iteration={i}, cost={cost}")
-        return cost
-
-    @staticmethod
-    def cross_entropy_cost(y_pred, y_true):  # TODO assumes y_true is a series, but better if more generic
-        cost = np.sum(y_true * np.log(y_pred) + (1. - y_true) * np.log(1. - y_pred)) / -len(y_true)
-        return cost.squeeze()
-
-    @staticmethod
-    def sigmoid(z):
-        return 1. / (1 + np.exp(-z))
-
-    def predict(self, X):
-        Z = np.dot(self.w.T, X) + self.b
-        A = LogReg.sigmoid(Z)
-        y_pred = [int(a > self.predict_thresh) for a in A.squeeze()]
-        return y_pred
-
-
 class NetBin:
+    """Artificial neural network for binary classification"""
+    # TODO make hidden layer activation functions soft coded
     def __init__(self, num_features, hidden_layers, w_init_scale=0.01, predict_thresh=0.5):
         self.predict_thresh = predict_thresh
         self.layers = [num_features] + hidden_layers + [1]
         self.weights = [np.array([None])]
         self.biases = [np.array([None])]
         self.activation_functions = [None] + [NetBin._tanh] * len(hidden_layers) + [NetBin._sigmoid]
-        self.activation_function_derivatives = [None] + [NetBin._tanh_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
+        self.activation_function_derivs = [None] + [NetBin._tanh_deriv] * len(hidden_layers) + [NetBin._sigmoid_deriv]
         for l in range(1, len(self.layers)):
             self.weights.append(np.random.randn(self.layers[l], self.layers[l-1]) * w_init_scale)
             self.biases.append(np.zeros((self.layers[l], 1)))
-
-    # def init_parameters(self, w_init_scale):  # TODO not sure this is necessary after all
-    #     init_weights, init_biases = [], []
-    #     for l in range(1, len(self.layers)):
-    #         init_weights.append(np.random.randn(self.layers[l], self.layers[l - 1]) * w_init_scale)
-    #         init_biases.append(np.zeros((self.layers[l], 1)))
-    #     return init_weights, init_biases
 
     @staticmethod
     def _cost(y_pred, y_true):
@@ -91,7 +33,7 @@ class NetBin:
 
     @staticmethod
     def _sigmoid_deriv(Z):
-        return LogReg.sigmoid(Z) * (1 - LogReg.sigmoid(Z))
+        return NetBin.sigmoid(Z) * (1 - NetBin.sigmoid(Z))
 
     @staticmethod
     def _tanh(Z):
@@ -115,7 +57,7 @@ class NetBin:
         sum_frob = np.sum([np.power(np.linalg.norm(self.weights[l], ord='fro'), 2) for l in range(1, len(self.layers))])
         return (reg_param / (2 * n_cases)) * sum_frob
 
-    def _forward(self, X, y, reg_param):
+    def _forward(self, X, y, reg_param):  # TODO fail more gracefully if X and y dimensions don't work
         self.activations = [X]
         self.signals = [np.array([None])]  # array of Z
         for l in range(1, len(self.layers)):
@@ -130,7 +72,7 @@ class NetBin:
         weight_derivs = []
         bias_derivs = []
         for l in range(1, len(self.layers))[::-1]:
-            g_prime_Z = self.activation_function_derivatives[l](self.signals[l])
+            g_prime_Z = self.activation_function_derivs[l](self.signals[l])
             dZ = np.multiply(next_dA, g_prime_Z)
             reg_term = (reg_param / y.shape[1]) * self.weights[l]
             dW = (1/y.shape[1]) * np.dot(dZ, self.activations[l-1].T) + reg_term
@@ -154,12 +96,8 @@ class NetBin:
             cost = self._forward(X, y, reg_param)
             weight_derivs, bias_derivs = self._backward(y, reg_param)
             self._update(weight_derivs, bias_derivs, learn_rate)
-            if i % int(1. / print_frequency) == 0:  # TODO save these values and report afterwards? also checkpoint
+            if i % int(1. / print_frequency) == 0:
                 print(f"NetBin: iteration={i}, cost={cost}")
-                # print(f"weights={self.weights}")
-                # print(f"Z_L={self.signals[-1]}")
-                # print(f"weight_derivs={weight_derivs}")
-                # print(f"bias_derivs={bias_derivs}")
         return cost
 
     def predict_scores(self, X):
@@ -175,7 +113,7 @@ class NetBin:
         return y_pred
 
 
-def calculations():
+def _test_calculations():
     np.random.seed(10)
     num_features, m = 2, 5
     model = NetBin(num_features, [2, 2], w_init_scale=1)
@@ -218,4 +156,4 @@ def calculations():
 
 
 if __name__ == '__main__':
-    calculations()
+    _test_calculations()

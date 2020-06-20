@@ -4,7 +4,7 @@ Christopher Monit
 
 Summer 2020
 
-_I have wanted to explore the predictive capability of simple artificial neural networks, having taken the <a id="coursera" href="https://www.coursera.org/specializations/deep-learning">Coursera Deep Learning specialisation</a>. Here I have implemented my own binary classification networks from scratch for a short research project. The following report summarises the dataset studied, models evaluated and concludes with some discussion points on how this could be improved upon._
+_Here I have implemented artificial neural network machine learning models from scratch, for a short research project into identifying individuals suffering from heart disease using indirect measurements. The following report summarises the dataset studied, describes the models evaluated and their performance and concludes with some discussion points on how the models could be improved upon._
 
 ## Background
 Coronary heart disease (CHD) affects 2.3 million people and is responsible for 64,000 deaths annually in the UK (<a id="bhf" href="https://www.bhf.org.uk/what-we-do/our-research/heart-statistics">British Heart Foundation</a>). It is caused by aggregation of fatty deposits in the coronary arteries and normally diagnosed by electrocardiogram or chest x-ray, but using machine learning it may be possible to accurately identify CHD from indirect measurements such as blood tests and patient reported symptoms, saving time and costs.
@@ -17,10 +17,10 @@ Here we investigate the predictive potential of shallow neural networks in ident
 The data comprise six quantitative (or ordinal) and seven categorical features, defined in the table below. Firstly, we investigate whether there is discriminatory signal in these variables which might inform a classification model. Visualising the features by presence/absence of CHD reveals clearly distinct distributions for some but not all measurements:
 
 <p align="center">
-<img src="../docs/cleveland/categoricals_plot.png" alt="Continuous variable distributions" width="600"/>
+<img src="../docs/categoricals_plot.png" alt="Continuous variable distributions" width="600"/>
 </p>
 <p align="center">
-<img src="../docs/cleveland/quantitatives_plot.png" alt="Continuous variable distributions" width="600"/>
+<img src="../docs/quantitatives_plot.png" alt="Continuous variable distributions" width="600"/>
 </p>
 
 But are these differences statistically significant? We applied the two-sided Mann-Whitney U test for the six quantitative features, as this is a nonparametric test that requires no assumption about the underlying distributions, while for the seven categorical variables we apply Pearson's chi squared test. We reject the null hypothesis of identical distributions if _p_ < 0.05. With 13 features to investigate, performing multiple hypothesis tests increases the danger of type 1 error and therefore adjust the resulting _p_ values using the Bonferroni correction (arguably the most conservative of correction procedures) and retain the 0.05 threshold (values to 5 decimal places):
@@ -46,13 +46,17 @@ We concluded there is significant discriminatory signal among the majority of fe
 Computing Kendall's rank correlation coefficient between features (with categorical features transformed to quantative using one hot encoding), showed there is not an overwhelmingly strong correlation between any of the features:
 
 <p align="center">
-<img src="../docs/cleveland/corr_mat_kendall.png" alt="Correlation matrix" width="600"/>
+    <img src="../docs/corr_mat_kendall.png" alt="Correlation matrix" width="600"/>
 </p>
 
 ### Binary classification neural network models
 
 #### Models
-We evaluated a set of fully connected neural network architectures with up to two hidden layers using hyperbolic tangent ('tanh') activation functions and an output layer comprising a single sigmoid unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to 2 hidden layers, comprising up to 16 units each. We use the notation 'n_m_1' to represent a network with two hidden layers comprising n and m units respectively, with a single sigmoid output unit. Weight and bias parameters were determined by 10,000 iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Squared Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with a range of regularisation parameter (lambda) values. 
+We evaluated a set of fully connected, feedforward neural network architectures with up to two hidden layers using hyperbolic tangent ('tanh') activation functions and an output layer comprising a single sigmoid unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to two hidden layers, comprising up to 16 units each. We use the notation '1', 'n_1' or 'n_m_1' to represent networks comprising zero, one or two hidden layers comprising n or m units each, with a single sigmoid output unit (see figure). Weight and bias parameters were determined by 10,000 iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Squared Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with a range of regularisation parameter (lambda) values.
+
+<p align="center">
+    <img src="../docs/architectures.png" alt="Model architectures" width="600"/>
+</p>
 
 #### Model training and validation
 
@@ -61,7 +65,7 @@ All 13 features were used, with categorical features transformed into multiple b
 The figures below summarise the influence of hyperparameters on mean ROC AUC from 4-fold cross validation, on both the training and validation sets, over a range of hyperparameter values:
 
 <div align="center">
-    <img src="../docs/cleveland/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
+    <img src="../docs/coarse_train_mean_auc.png" alt="Correlation matrix" width="600"/>
 </div>
 <p align="center">
     Hyperparameter grid search, mean AUC on cross validation training datasets. 
@@ -69,7 +73,7 @@ The figures below summarise the influence of hyperparameters on mean ROC AUC fro
 
 
 <div align="center">
-    <img src="../docs/cleveland/coarse_val_mean_auc.png" alt="Correlation matrix" width="600"/>
+    <img src="../docs/coarse_val_mean_auc.png" alt="Correlation matrix" width="600"/>
 </div>
 <p align="center">
     Hyperparameter grid search, mean AUC on cross validation validation datasets. 
@@ -90,7 +94,7 @@ Performance metrics of the five (tanh-activation) models with highest ROC AUC ar
 We then pursued a finer grid search over a narrower range of values in this high-performing region of the hyperparameter space, and measured model performance as before:
 
 <p align="center">
-<img src="../docs/cleveland/fine_val_mean_auc.png" alt="Correlation matrix" width="600"/>
+<img src="../docs/fine_val_mean_auc.png" alt="Correlation matrix" width="600"/>
 </p>
 
 The five highest performing models were as follows: 
@@ -116,7 +120,7 @@ We then trained this optimum model on the whole training/validation set (i.e. po
 Plotting the ROC curve using the range of available thresholds:
 
 <div align="center">
-    <img src="../docs/cleveland/test_roc.png" alt="Correlation matrix" width="600"/>
+    <img src="../docs/test_roc.png" alt="Correlation matrix" width="600"/>
 </div>
 
 ## Discussion

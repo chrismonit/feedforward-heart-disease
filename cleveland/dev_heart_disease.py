@@ -56,17 +56,6 @@ def experiment(X, y, X_test, y_test, architecture=[], weight_scale=0.01, alpha=1
     return model, cost, {**model_info, **train_performance}, {**model_info, **test_performance}
 
 
-# def tmp_kfolds_example():
-#     X = np.array([[.1, .2], [.3, .4], [.1, .2], [.3, .4]])
-#     y = np.array([1, 2, 3, 4])
-#     kf = KFold(n_splits=2, shuffle=True, random_state=10)
-#     kf.get_n_splits(X)
-#     for train_index, test_index in kf.split(X):
-#         print("TRAIN:", train_index, "TEST:", test_index)
-#         X_train, X_test = X[train_index], X[test_index]
-#         y_train, y_test = y[train_index], y[test_index]
-
-
 def split_folds(X, y, standardise_data=True, **kwargs):
     # NB this assumes rows are cases, columns are features
     kf = StratifiedKFold(**kwargs)
@@ -123,7 +112,7 @@ def hp_search(X_train_val, y_train_val):
     # pd.DataFrame(columns=shared_cols).to_csv(os.path.join(OUT_DIR, "val_results.csv"), index=False)
     n_prints = 5
 
-    # Coarse search:  # TODO could make a grid search object to house these? sci kit learn may have something
+    # Coarse search:
     # architectures = [[1], [2], [4], [8], [16], [2, 2], [2, 4], [2, 8], [2, 16], [4, 2], [4, 4], [4, 8],
     #                  [4, 16], [8, 2], [8, 4], [8, 8], [8, 16], [16, 2], [16, 4], [16, 8], [16, 16, 1]]
     # reg_params = [0.0, 0.5, 1.0, 1.5]

@@ -1,3 +1,7 @@
+"""
+Tests for neural network implementations.
+"""
+
 import numpy as np
 from ml.models import NetBin
 

@@ -1,3 +1,6 @@
+"""
+Training and evaluating ML models on UCI heart disease dataset.
+"""
 import numpy as np
 import pandas as pd
 import os
@@ -159,7 +162,7 @@ def run_test(X_train, X_test, y_train, y_test):
     X_train_scaled, X_train_means, X_train_stds = standardise(X_train)
     X_test_scaled = (X_test - X_train_means).div(X_train_stds + EPSILON)  # avoid zero div problem
     settings = dict(zip(['architecture', 'reg_param', 'weight_scale', 'alpha', 'n_iter', 'print_freq'],
-                        [[2], 0, 0.01, 2.1, 1e4, 0.0005]))
+                        [[2], 0, 0.01, 2.1, 1e4, 0.0005]))  # most promising model from CV experiments
 
     X_train_scaled = X_train_scaled.T
     X_test_scaled = X_test_scaled.T
@@ -177,7 +180,6 @@ def run_test(X_train, X_test, y_train, y_test):
     print(test_df)
     print(test_df[['dataset', 'arch.', 'alpha', 'reg', 'roc_auc', 'sens.', 'spec.', 'acc.']].round(DEC)
           .to_markdown(showindex=False))
-    # test_df.to_csv(os.path.join(OUT_DIR, "test_results.csv"), index=False)
 
     # ROC curve
     pred_scores = model.predict_scores(X_test_scaled)

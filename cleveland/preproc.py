@@ -1,3 +1,7 @@
+"""
+Pre-processing of UCI heart disease dataset, to generate input for preliminary analysis and ML development.
+"""
+
 import pandas as pd
 import numpy as np
 

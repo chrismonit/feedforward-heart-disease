@@ -1,3 +1,7 @@
+"""
+Preliminary analysis of UCI heart disease dataset, investigating discriminatory signal amongst features etc.
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

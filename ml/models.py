@@ -1,3 +1,8 @@
+"""
+Implementation of artificial neural networks.
+"""
+
+
 import numpy as np
 
 EPS = 1e-20

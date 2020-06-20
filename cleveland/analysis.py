@@ -1,3 +1,7 @@
+"""
+Analysing results from machine learning experiments.
+"""
+
 import pandas as pd
 import numpy as np
 import os
@@ -13,7 +17,7 @@ DEC = 4
 FILE = "fine.val_results.csv"
 
 
-# TODO separate into distict functions for coarse and fine fine grain search results
+# TODO separate into distinct functions for coarse and fine fine grain search results
 def hp_results():
     """Analyse results from hyperparameter grid searches"""
     file_path = os.path.join(OUT_DIR, FILE)

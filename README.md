@@ -54,9 +54,10 @@ Computing Kendall's rank correlation coefficient between features (with categori
 #### Models
 We evaluated a set of fully connected, feedforward neural network architectures with up to two hidden layers using hyperbolic tangent ('tanh') activation functions and an output layer comprising a single sigmoid unit. The complexity of the networks ranged from no hidden units (i.e. logistic regression) to two hidden layers, comprising up to 16 units each. We use the notation '1', 'n_1' or 'n_m_1' to represent networks comprising zero, one or two hidden layers comprising n or m units each, with a single sigmoid output unit (see figure). Weight and bias parameters were determined by 10,000 iterations of standard, batch gradient descent using the cross entropy cost function, with a range of learning rate (alpha) values. Squared Frobenius norm (matrix L2 norm) regularisation for weight parameters was used to limit overfitting to training data, with a range of regularisation parameter (lambda) values.
 
-<p align="center">
+<div align="center">
     <img src="docs/architectures.png" alt="Model architectures" width="600"/>
-</p>
+</div>
+
 
 #### Model training and validation
 

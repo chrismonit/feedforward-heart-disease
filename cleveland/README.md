@@ -158,7 +158,3 @@ Seven of the 13 variables are categorical or binary, and therefore not directly 
 #### Standardising values
 Models reliant on large numbers of linear operations, including neural networks, are vulnerable to overly conditioning predictions based on the magnitude or range of some features; but this can be avoided by transforming input features and enforcing a consistent distribution. Following one hot encoding of categorical variables, we scaled training cases such that each feature had mean equal to 0 and variance equal to 1. Each fold's validation set and the test set were transformed by the same procedure as corresponding training data. 
 
-## References
-<a id="1">[1]</a> 
-
-

@@ -1,4 +1,4 @@
-# Heart Disease Detection
+# Heart Disease Detection with Feedforward Neural Networks
 
 Chris Monit, summer 2020
 

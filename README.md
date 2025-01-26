@@ -4,9 +4,9 @@ Christopher Monit
 
 Summer 2020
 
-In this personal project, I implemented feed forward neural networks of arbitrary size from scratch, including manual calculation of gradients. It was an exercise to consolidate learnings from Andrew Ng's Deep Learning Specialisation course.
+In this personal project, I implemented feedforward neural networks of arbitrary size from scratch, including manual calculation of gradients. It was an exercise to consolidate learnings from Andrew Ng's Deep Learning Specialisation course.
 
-The project is framed as a short research project into identifying individuals suffering from heart disease using indirect measurements. The following report summarises the dataset studied, describes the models evaluated and their performance. It concludes with discussion on how the models could be improved.
+The project is framed as a short research project into identifying individuals suffering from heart disease using indirect measurements. The following report comprises an exploratory data analysis, descriptions of the models implemented, evaluations of model performance on held-out data and a discussion of how the models could be improved.
 
 ## Background
 Coronary heart disease (CHD) affects 2.3 million people and is responsible for 64,000 deaths annually in the UK (<a id="bhf" href="https://www.bhf.org.uk/what-we-do/our-research/heart-statistics">British Heart Foundation</a>). It is caused by aggregation of fatty deposits in the coronary arteries and normally diagnosed by electrocardiogram or chest x-ray, but using machine learning it may be possible to accurately identify CHD from indirect measurements such as blood tests and patient reported symptoms, saving time and costs.
